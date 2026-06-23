@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        @keyframes pulse-ring {
+            0% { transform: scale(0.33); opacity: 0.8; }
+            80%, 100% { opacity: 0; }
+        }
+        
+        @keyframes pulse-dot {
+            0% { transform: scale(0.8); opacity: 1; }
+            50% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(0.8); opacity: 1; }
+        }
+
+        .pulse-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+        }
+
+        .pulse-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #0040df;
+            border-radius: 50%;
+            animation: pulse-ring 2.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+
+        .pulse-dot {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 24px;
+            height: 24px;
+            background-color: #000000;
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+
+        .progress-bar-shine {
+            background: linear-gradient(90deg, #0040df 0%, #2d5bff 50%, #0040df 100%);
+            background-size: 200% 100%;
+            animation: shine 1.5s linear infinite;
+        }
+
+        @keyframes shine {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .bottom-sheet-drag-handle {
+            width: 36px;
+            height: 4px;
+            background-color: #e2e2e2;
+            border-radius: 2px;
+            margin: 8px auto;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-dim": "#dadada",
+                      "tertiary-container": "#1c1b1b",
+                      "tertiary": "#000000",
+                      "primary-container": "#1b1b1b",
+                      "primary": "#000000",
+                      "inverse-surface": "#2f3131",
+                      "error": "#ba1a1a",
+                      "tertiary-fixed-dim": "#c8c6c5",
+                      "primary-fixed-dim": "#c6c6c6",
+                      "secondary": "#0040df",
+                      "on-surface-variant": "#4c4546",
+                      "on-surface": "#1a1c1c",
+                      "tertiary-fixed": "#e5e2e1",
+                      "surface-tint": "#5e5e5e",
+                      "error-container": "#ffdad6",
+                      "on-primary": "#ffffff",
+                      "inverse-on-surface": "#f1f1f1",
+                      "on-secondary-fixed": "#001355",
+                      "on-primary-container": "#848484",
+                      "surface-container": "#eeeeee",
+                      "on-tertiary-fixed": "#1c1b1b",
+                      "on-secondary-container": "#efefff",
+                      "on-background": "#1a1c1c",
+                      "surface-variant": "#e2e2e2",
+                      "primary-fixed": "#e2e2e2",
+                      "on-secondary": "#ffffff",
+                      "surface-container-high": "#e8e8e8",
+                      "secondary-container": "#2d5bff",
+                      "on-tertiary-container": "#858383",
+                      "on-error-container": "#93000a",
+                      "on-tertiary-fixed-variant": "#474646",
+                      "surface-container-lowest": "#ffffff",
+                      "on-tertiary": "#ffffff",
+                      "surface-bright": "#f9f9f9",
+                      "surface-container-low": "#f3f3f3",
+                      "surface-container-highest": "#e2e2e2",
+                      "secondary-fixed-dim": "#b8c3ff",
+                      "surface": "#f9f9f9",
+                      "background": "#f9f9f9",
+                      "secondary-fixed": "#dde1ff",
+                      "outline": "#7e7576",
+                      "on-primary-fixed": "#1b1b1b",
+                      "outline-variant": "#cfc4c5",
+                      "on-error": "#ffffff",
+                      "on-secondary-fixed-variant": "#0035bd",
+                      "inverse-primary": "#c6c6c6",
+                      "on-primary-fixed-variant": "#474747"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "base": "4px",
+                      "xs": "4px",
+                      "xl": "32px",
+                      "margin-mobile": "16px",
+                      "md": "16px",
+                      "gutter": "16px",
+                      "margin-desktop": "48px",
+                      "sm": "8px",
+                      "lg": "24px"
+              },
+              "fontFamily": {
+                      "label-md": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "headline-sm": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "button-lg": ["Inter"],
+                      "display-lg": ["Inter"],
+                      "body-sm": ["Inter"],
+                      "body-md": ["Inter"]
+              },
+              "fontSize": {
+                      "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "26px", "fontWeight": "400"}],
+                      "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "button-lg": ["16px", {"lineHeight": "24px", "fontWeight": "600"}],
+                      "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body-md text-on-surface overflow-hidden h-screen w-full">
+<!-- Map Background -->
+<div class="fixed inset-0 z-0">
+<img class="w-full h-full object-cover grayscale opacity-80" data-alt="A clean, minimalist high-fidelity map of an urban city with simplified grayscale buildings and primary roads highlighted. The aesthetic is modern and professional, using a desaturated palette to ensure UI overlays are highly legible. Subtle depth is created through soft ambient shadows in the city grid, reflecting a premium corporate mobility app environment." data-location="Bengaluru, India" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDiSijjOiQLS1TktdKedepElECMHDpDSKZ-PM8JPsby_NGUumnPqDqq6JGHfNoQraOhDg-f4QIHYzwY1fZ4d3Mfbzxa0pQeUajdPBTs61su0RBUe24Fa0z0fl1SYRV7BWQuVzOrzWwx1cezWeDh9bt6GZpTjVR2F09-8d3mJQA0mrOmPbZD4Csff5gVn2gmngI38CtAt4iXnPBcOzIrfl2qDUZmWo34yW_h3evathoeyPBQpvrP43K-hqFBF-PjvhByfoePzaNE934"/>
+<!-- Pulsing Search UI -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
+<div class="pulse-container">
+<div class="pulse-ring"></div>
+<div class="pulse-ring" style="animation-delay: -0.5s"></div>
+<div class="pulse-ring" style="animation-delay: -1.0s"></div>
+<div class="pulse-dot"></div>
+</div>
+</div>
+</div>
+<!-- Top App Bar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-margin-mobile h-16 bg-surface/80 backdrop-blur-md">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container active:scale-95 transition-all">
+<span class="material-symbols-outlined text-on-surface">arrow_back</span>
+</button>
+<h1 class="font-headline-sm text-headline-sm text-on-surface">Finding Drivers</h1>
+<div class="w-10"></div> <!-- Spacer for centering -->
+</header>
+<!-- Bottom Sheet -->
+<main class="fixed bottom-0 w-full z-50 bg-surface-container-lowest rounded-t-xl shadow-[0px_-4px_20px_rgba(0,0,0,0.05)] pb-10 transition-transform duration-500 ease-out">
+<div class="bottom-sheet-drag-handle"></div>
+<div class="px-margin-mobile space-y-lg">
+<!-- Matching Status -->
+<div class="space-y-sm pt-2">
+<div class="flex justify-between items-end">
+<p class="font-label-md text-label-md text-secondary uppercase tracking-wider">Active Search</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Matching with nearest drivers...</p>
+</div>
+<!-- Animated Progress Bar -->
+<div class="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full w-2/3 progress-bar-shine rounded-full"></div>
+</div>
+</div>
+<!-- Trip Summary Card -->
+<div class="bg-surface-bright rounded-xl border border-outline-variant p-md space-y-md">
+<div class="flex items-start gap-md">
+<div class="flex flex-col items-center py-1">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+<div class="w-[1px] h-8 border-l border-dashed border-outline-variant my-1"></div>
+<span class="w-2.5 h-2.5 bg-primary"></span>
+</div>
+<div class="flex-1 space-y-lg">
+<div class="space-y-xs">
+<p class="font-label-md text-label-md text-on-surface-variant uppercase">Pickup</p>
+<p class="font-body-md text-body-md font-semibold truncate">Koromangala 4th Block, 12th Main</p>
+</div>
+<div class="space-y-xs">
+<p class="font-label-md text-label-md text-on-surface-variant uppercase">Heading to</p>
+<p class="font-body-md text-body-md font-semibold truncate">Kempegowda International Airport</p>
+</div>
+</div>
+</div>
+<div class="h-[1px] bg-outline-variant/30 w-full"></div>
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">directions_car</span>
+</div>
+<div>
+<p class="font-body-md text-body-md font-bold">RideNow Prime</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Sedan • Top Rated</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-headline-sm text-headline-sm">₹542.00</p>
+<div class="flex items-center justify-end gap-1">
+<span class="material-symbols-outlined text-[14px] text-secondary" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+<p class="font-label-md text-label-md text-on-surface-variant">UPI</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Action -->
+<div class="pt-sm pb-2">
+<button class="w-full h-14 bg-primary text-on-primary font-button-lg text-button-lg rounded-xl active:scale-[0.98] transition-all hover:bg-tertiary shadow-lg">
+                    Cancel Request
+                </button>
+<p class="text-center font-body-sm text-body-sm text-on-surface-variant mt-md">
+                    No charge for cancellations within 2 mins
+                </p>
+</div>
+</div>
+</main>
+<!-- Overlay Micro-interactions -->
+<script>
+        // Simple entrance animation for bottom sheet
+        window.addEventListener('DOMContentLoaded', () => {
+            const sheet = document.querySelector('main');
+            sheet.style.transform = 'translateY(100%)';
+            setTimeout(() => {
+                sheet.style.transform = 'translateY(0)';
+            }, 100);
+        });
+
+        // Simulating matching progress
+        const progressBar = document.querySelector('.progress-bar-shine');
+        let width = 66;
+        setInterval(() => {
+            if (width < 98) {
+                width += 0.2;
+                progressBar.style.width = width + '%';
+            }
+        }, 500);
+    </script>
+</body></html>

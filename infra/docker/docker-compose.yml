@@ -1,0 +1,40 @@
+name: ridenow
+
+services:
+  postgres:
+    # postgis/postgis is a strict superset of postgres — PostGIS sits inert
+    # until a database runs `CREATE EXTENSION postgis`, so this works as the
+    # one Postgres instance for both relational and geospatial tables.
+    image: postgis/postgis:16-3.4-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ridenow
+      POSTGRES_PASSWORD: ridenow
+      POSTGRES_DB: ridenow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ridenow -d ridenow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:
+  redis-data:

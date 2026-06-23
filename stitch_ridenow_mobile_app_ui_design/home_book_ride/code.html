@@ -1,0 +1,299 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "secondary-fixed": "#dde1ff",
+                    "surface-tint": "#5e5e5e",
+                    "tertiary-container": "#1c1b1b",
+                    "tertiary-fixed-dim": "#c8c6c5",
+                    "inverse-surface": "#2f3131",
+                    "surface-container-high": "#e8e8e8",
+                    "on-tertiary-fixed": "#1c1b1b",
+                    "primary-container": "#1b1b1b",
+                    "on-secondary": "#ffffff",
+                    "inverse-primary": "#c6c6c6",
+                    "error-container": "#ffdad6",
+                    "on-primary-fixed": "#1b1b1b",
+                    "tertiary-fixed": "#e5e2e1",
+                    "tertiary": "#000000",
+                    "on-tertiary-fixed-variant": "#474646",
+                    "surface-container-lowest": "#ffffff",
+                    "surface": "#f9f9f9",
+                    "surface-variant": "#e2e2e2",
+                    "error": "#ba1a1a",
+                    "on-secondary-container": "#efefff",
+                    "on-tertiary": "#ffffff",
+                    "surface-container": "#eeeeee",
+                    "surface-dim": "#dadada",
+                    "primary-fixed-dim": "#c6c6c6",
+                    "on-secondary-fixed": "#001355",
+                    "background": "#f9f9f9",
+                    "inverse-on-surface": "#f1f1f1",
+                    "secondary-container": "#2d5bff",
+                    "on-error": "#ffffff",
+                    "on-surface": "#1a1c1c",
+                    "on-background": "#1a1c1c",
+                    "outline-variant": "#cfc4c5",
+                    "primary-fixed": "#e2e2e2",
+                    "on-tertiary-container": "#858383",
+                    "on-secondary-fixed-variant": "#0035bd",
+                    "on-primary-fixed-variant": "#474747",
+                    "secondary": "#0040df",
+                    "on-surface-variant": "#4c4546",
+                    "primary": "#000000",
+                    "surface-container-highest": "#e2e2e2",
+                    "on-error-container": "#93000a",
+                    "surface-bright": "#f9f9f9",
+                    "secondary-fixed-dim": "#b8c3ff",
+                    "outline": "#7e7576",
+                    "on-primary-container": "#848484",
+                    "surface-container-low": "#f3f3f3"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "32px",
+                    "gutter": "16px",
+                    "xs": "4px",
+                    "margin-desktop": "48px",
+                    "sm": "8px",
+                    "margin-mobile": "16px",
+                    "md": "16px",
+                    "base": "4px",
+                    "lg": "24px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "headline-sm": ["Inter"],
+                    "button-lg": ["Inter"],
+                    "body-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "26px", "fontWeight": "400"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "button-lg": ["16px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        #bottom-sheet {
+            transition: transform 0.4s cubic-bezier(0.33, 1, 0.68, 1);
+        }
+        
+        .map-gradient {
+            background: linear-gradient(to bottom, rgba(249,249,249,0.8) 0%, rgba(249,249,249,0) 20%, rgba(249,249,249,0) 80%, rgba(249,249,249,0.9) 100%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md overflow-hidden">
+<!-- Map Background Layer -->
+<div class="fixed inset-0 z-0">
+<img class="w-full h-full object-cover grayscale-[20%] opacity-90" data-alt="A clean, minimalist high-fidelity satellite map view of an urban metropolitan area with simplified street lines and soft desaturated tones. The map features a prominent blue glowing location pin at the center of a major intersection. The lighting is bright and airy, reflecting a professional light-mode aesthetic. High-contrast labels and a polished finish evoke a premium, quiet luxury digital interface." data-location="New Delhi, India" src="https://lh3.googleusercontent.com/aida-public/AB6AXuClhgdY6eTWLhOzADuodp5ZYQvJB3XaSqW5sgcgr7KaaSBag8Ie5wkUzw_vNITY1g-O1mRSbgsRnNhVqajTDw-pOmzcFQC9XCCF2mlfVuTTeR266J6Cq5tXGXhB79n-YPmMpe0YrQnlXWa2bBDBwtZ-SycR5GufY6ojHysKPyKQbqIzo_SwVnzAjYVz4jxoH_crQFnuVAm1253rLkzTcbXfPGIL4Eh6c-vZxD9m3gBD09LAMv_5U2d-gZB7NhcraP7iWYKy7IIYo7E">
+<div class="absolute inset-0 map-gradient pointer-events-none"></div>
+</div>
+<!-- Top Navigation Layer (Shared Component: TopAppBar) -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile py-sm bg-transparent">
+<div class="flex items-center gap-md">
+<button class="w-10 h-10 flex items-center justify-center bg-surface-container-lowest rounded-full shadow-sm hover:bg-surface-container-low transition-colors active:scale-95 duration-100">
+<span class="material-symbols-outlined text-primary" data-icon="menu">menu</span>
+</button>
+<h1 class="text-headline-md font-headline-md font-bold text-primary">RideNow</h1>
+</div>
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full border-2 border-surface-container-highest overflow-hidden active:scale-95 transition-transform">
+<img alt="User profile photo" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQP2XtLoSmGbDz3iTMwyLkDcfneawDEOtgFk6S9AvbONI0j04ohmr47MusvRFsHYQf0sCdjxFuH0MyDyiY3y2hVZRhiGLrkqvaj53ImcTdjn8l8O11V50xO_kkVo19xjr7W2NnTFsQZPcJNgbzOuxKZSek2UNLMdEchgSevRigPbWKI4nut1f357WJop1kIp_YfV9nRT-mPnir-DKj1gia3IMuj9wjLB1aZt66MHK63goHjc7NI0y0NltMZkf3NF92yXruigDwRGM">
+</div>
+</div>
+</header>
+<!-- Main Interactive Layer -->
+<main class="relative z-10 pt-24 px-margin-mobile h-screen flex flex-col">
+<!-- Search & Quick Actions Container -->
+<div class="space-y-lg">
+<!-- Search Bar -->
+<div class="relative group">
+<div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="search">search</span>
+</div>
+<input class="w-full h-14 pl-12 pr-4 bg-surface-container-lowest border-none rounded-xl shadow-[0px_4px_20px_rgba(0,0,0,0.05)] text-body-lg font-body-lg focus:ring-2 focus:ring-primary transition-all" placeholder="Where to?" type="text">
+</div>
+<!-- Horizontal Quick Actions (NavigationDrawer Labels applied here) -->
+<div class="flex gap-md overflow-x-auto hide-scrollbar -mx-margin-mobile px-margin-mobile pb-sm">
+<button class="flex-shrink-0 flex flex-col items-center justify-center gap-xs p-4 w-24 bg-surface-container-lowest rounded-xl shadow-sm hover:bg-surface-container-high transition-colors active:scale-95">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="directions_car">directions_car</span>
+<span class="text-label-md font-label-md">Ride</span>
+</button>
+<button class="flex-shrink-0 flex flex-col items-center justify-center gap-xs p-4 w-24 bg-surface-container-lowest rounded-xl shadow-sm hover:bg-surface-container-high transition-colors active:scale-95">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="electric_rickshaw">electric_rickshaw</span>
+<span class="text-label-md font-label-md">Auto</span>
+</button>
+<button class="flex-shrink-0 flex flex-col items-center justify-center gap-xs p-4 w-24 bg-surface-container-lowest rounded-xl shadow-sm hover:bg-surface-container-high transition-colors active:scale-95">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="two_wheeler">two_wheeler</span>
+<span class="text-label-md font-label-md">Bike</span>
+</button>
+<button class="flex-shrink-0 flex flex-col items-center justify-center gap-xs p-4 w-24 bg-surface-container-lowest rounded-xl shadow-sm hover:bg-surface-container-high transition-colors active:scale-95">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="key">key</span>
+<span class="text-label-md font-label-md">Rentals</span>
+</button>
+<button class="flex-shrink-0 flex flex-col items-center justify-center gap-xs p-4 w-24 bg-surface-container-lowest rounded-xl shadow-sm hover:bg-surface-container-high transition-colors active:scale-95">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="package_2">package_2</span>
+<span class="text-label-md font-label-md">Package</span>
+</button>
+<button class="flex-shrink-0 flex flex-col items-center justify-center gap-xs p-4 w-24 bg-surface-container-lowest rounded-xl shadow-sm hover:bg-surface-container-high transition-colors active:scale-95">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="calendar_month">calendar_month</span>
+<span class="text-label-md font-label-md">Schedule</span>
+</button>
+</div>
+</div>
+<!-- Floating Action Button (Contextual for Home) -->
+<button class="fixed bottom-40 right-4 z-20 w-14 h-14 bg-primary text-on-primary rounded-full shadow-xl flex items-center justify-center active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="my_location" style="font-variation-settings: 'FILL' 1;">my_location</span>
+</button>
+<!-- Bottom Sheet (Plan your trip) -->
+<div class="fixed bottom-0 left-0 w-full bg-surface-container-lowest rounded-t-[32px] shadow-[0px_-8px_40px_rgba(0,0,0,0.08)] z-40 px-margin-mobile pt-sm pb-32 max-h-[618px] translate-y-[60%]" id="bottom-sheet">
+<!-- Drag Handle -->
+<div class="w-12 h-1 bg-surface-container-highest rounded-full mx-auto mb-lg" onclick="toggleSheet()"></div>
+<h2 class="text-headline-sm font-headline-sm text-primary mb-lg">Plan your trip</h2>
+<!-- Saved Locations -->
+<div class="grid grid-cols-2 gap-md mb-xl">
+<button class="flex items-center gap-md p-md bg-surface-container-low rounded-xl hover:bg-surface-container-high transition-colors">
+<div class="w-10 h-10 bg-secondary-container text-on-secondary-container rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+</div>
+<div class="text-left">
+<p class="font-bold text-body-md">Home</p>
+<p class="text-body-sm text-on-surface-variant truncate w-24">Vasant Kunj...</p>
+</div>
+</button>
+<button class="flex items-center gap-md p-md bg-surface-container-low rounded-xl hover:bg-surface-container-high transition-colors">
+<div class="w-10 h-10 bg-secondary-container text-on-secondary-container rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="work" style="font-variation-settings: 'FILL' 1;">work</span>
+</div>
+<div class="text-left">
+<p class="font-bold text-body-md">Work</p>
+<p class="text-body-sm text-on-surface-variant truncate w-24">Cyber City...</p>
+</div>
+</button>
+</div>
+<!-- Recent Destinations -->
+<div class="space-y-0">
+<div class="flex items-center gap-lg py-md border-b border-surface-container">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="history">history</span>
+<div class="flex-1">
+<p class="font-bold text-body-md">Indira Gandhi International Airport</p>
+<p class="text-body-sm text-on-surface-variant">New Delhi, Delhi</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="flex items-center gap-lg py-md border-b border-surface-container">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="history">history</span>
+<div class="flex-1">
+<p class="font-bold text-body-md">Cyber Hub</p>
+<p class="text-body-sm text-on-surface-variant">DLF Phase 2, Gurugram</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="flex items-center gap-lg py-md">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="history">history</span>
+<div class="flex-1">
+<p class="font-bold text-body-md">Select CITYWALK</p>
+<p class="text-body-sm text-on-surface-variant">Saket District Centre, New Delhi</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar (Shared Component: BottomNavBar) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-margin-mobile pb-6 pt-2 bg-surface dark:bg-background shadow-[0px_-4px_20px_rgba(0,0,0,0.05)] rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-container font-bold p-2 hover:bg-surface-container-high dark:hover:bg-tertiary-container rounded-lg transition-transform active:scale-95" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="text-label-md font-label-md">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-tertiary-container p-2 hover:bg-surface-container-high dark:hover:bg-tertiary-container rounded-lg transition-transform active:scale-95" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="history">history</span>
+<span class="text-label-md font-label-md">Activity</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-tertiary-container p-2 hover:bg-surface-container-high dark:hover:bg-tertiary-container rounded-lg transition-transform active:scale-95" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="payments">payments</span>
+<span class="text-label-md font-label-md">Payments</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-tertiary-container p-2 hover:bg-surface-container-high dark:hover:bg-tertiary-container rounded-lg transition-transform active:scale-95" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="security">security</span>
+<span class="text-label-md font-label-md">Safety</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-tertiary-container p-2 hover:bg-surface-container-high dark:hover:bg-tertiary-container rounded-lg transition-transform active:scale-95" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="person">person</span>
+<span class="text-label-md font-label-md">Account</span>
+</a>
+</nav>
+<script>
+        let isSheetExpanded = false;
+        const sheet = document.getElementById('bottom-sheet');
+        
+        function toggleSheet() {
+            if (isSheetExpanded) {
+                sheet.style.transform = 'translateY(60%)';
+            } else {
+                sheet.style.transform = 'translateY(0%)';
+            }
+            isSheetExpanded = !isSheetExpanded;
+        }
+
+        // Lightweight atmospheric effect: gentle map pan on load
+        window.addEventListener('load', () => {
+            const map = document.querySelector('img[data-location]');
+            if (map) {
+                map.style.transition = 'transform 10s ease-out';
+                map.style.transform = 'scale(1.1) translate(-2%, -2%)';
+            }
+        });
+
+        // Interactive states for buttons
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('touchstart', () => {
+                btn.classList.add('scale-95');
+            });
+            btn.addEventListener('touchend', () => {
+                btn.classList.remove('scale-95');
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,42 @@
+# dependencies
+node_modules/
+
+# Expo / React Native
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+.metro-health-check*
+/ios
+/android
+
+# Go / API
+ridenow.db
+ridenow.db-shm
+ridenow.db-wal
+
+# logs / debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# env / secrets
+.env
+.env*.local
+*.pem
+
+# typescript
+*.tsbuildinfo
+
+# macOS
+.DS_Store
+
+# nested repo backup (consolidated)
+apps/rider-app/.git_backup_nested/

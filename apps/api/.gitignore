@@ -1,0 +1,8 @@
+
+# Local SQLite database
+ridenow.db
+ridenow.db-shm
+ridenow.db-wal
+
+# Secrets — never commit
+.env
