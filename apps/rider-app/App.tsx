@@ -1,30 +1,22 @@
 import React from 'react';
-import { View } from 'react-native';
-import { useFonts, Inter_400Regular, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import HomeScreen from './src/screens/HomeScreen';
+import LiveTripTrackingScreen from './src/screens/booking/LiveTripTrackingScreen';
+import RouteSelectionScreen from './src/screens/booking/RouteSelectionScreen';
 
-import AppNavigator from './src/navigation/AppNavigator';
-import { AuthProvider } from './src/auth/AuthContext';
-import { colors } from './src/theme/theme';
+const Stack = createStackNavigator();
 
 export default function App() {
-  const [fontsLoaded] = useFonts({
-    Inter_400Regular,
-    Inter_600SemiBold,
-    Inter_700Bold,
-  });
-
-  if (!fontsLoaded) {
-    return <View style={{ flex: 1, backgroundColor: colors.background }} />;
-  }
-
   return (
-    <SafeAreaProvider>
-      <StatusBar style="dark" />
-      <AuthProvider>
-        <AppNavigator />
-      </AuthProvider>
-    </SafeAreaProvider>
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Home">
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="RouteSelection" component={RouteSelectionScreen} />
+        <Stack.Screen name="LiveTripTracking" component={LiveTripTrackingScreen} />
+      </Stack.Navigator>
+      <StatusBar style="auto" />
+    </NavigationContainer>
   );
 }
