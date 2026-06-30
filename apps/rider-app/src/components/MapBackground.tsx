@@ -1,65 +1,157 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  Image
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import MapplsWebMap from './MapplsWebMap';
+import { isMapplsConfigured } from '../config/mappls';
+import { LatLng } from '../types/geo';
 
-import { colors } from '../theme/theme';
+interface MapBackgroundProps {
+  center?: LatLng;
+  zoom?: number;
+  showPin?: boolean;
+  children?: React.ReactNode;
+}
 
-/**
- * Stand-in for the live map layer (Level 0 "Floor" in the Urban Kinetic system).
- * Swap the inner View for `react-native-maps` MapView once a Maps API key is wired up —
- * the gradient overlay and pin should be layered on top exactly the same way.
- */
-export default function MapBackground() {
-  return (
-    <View style={StyleSheet.absoluteFill}>
-      <View style={styles.surface} />
-      <View style={styles.pinWrap}>
-        <View style={styles.pinHalo} />
-        <View style={styles.pin} />
+export default function MapBackground({
+  center,
+  zoom = 16,
+  showPin = true,
+  children
+}: MapBackgroundProps) {
+  const renderMapLayer = () => {
+    if (isMapplsConfigured()) {
+      return (
+        <MapplsWebMap
+          center={center}
+          zoom={zoom}
+          style={StyleSheet.absoluteFill}
+        />
+      );
+    }
+
+    // Fallback placeholder when Mappls is not configured
+    return (
+      <View style={[StyleSheet.absoluteFill, styles.placeholderMap]}>
+        <View style={styles.gridPattern}>
+          {[...Array(20)].map((_, i) => (
+            <View key={`h-${i}`} style={[styles.gridLine, styles.horizontalLine, { top: i * 50 }]} />
+          ))}
+          {[...Array(10)].map((_, i) => (
+            <View key={`v-${i}`} style={[styles.gridLine, styles.verticalLine, { left: i * 50 }]} />
+          ))}
+        </View>
       </View>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Map layer */}
+      {renderMapLayer()}
+
+      {/* Gradient overlay */}
       <LinearGradient
-        colors={[
-          'rgba(249,249,249,0.85)',
-          'rgba(249,249,249,0)',
-          'rgba(249,249,249,0)',
-          'rgba(249,249,249,0.95)',
-        ]}
-        locations={[0, 0.2, 0.8, 1]}
-        style={StyleSheet.absoluteFill}
-        pointerEvents="none"
+        colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.3)', 'transparent']}
+        style={styles.gradientOverlay}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 0.5 }}
       />
+
+      {/* Center pin overlay */}
+      {showPin && (
+        <View style={styles.centerPinContainer} pointerEvents="none">
+          <View style={styles.pinShadow} />
+          <View style={styles.pin}>
+            <View style={styles.pinInner} />
+          </View>
+          <View style={styles.pinPoint} />
+        </View>
+      )}
+
+      {/* Content overlay */}
+      {children}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  surface: {
+  container: {
     flex: 1,
-    backgroundColor: colors.surfaceDim,
+    backgroundColor: '#f3f4f6'
   },
-  pinWrap: {
+  placeholderMap: {
+    backgroundColor: '#e5e7eb'
+  },
+  gridPattern: {
+    ...StyleSheet.absoluteFillObject
+  },
+  gridLine: {
     position: 'absolute',
-    top: '42%',
+    backgroundColor: '#d1d5db',
+    opacity: 0.3
+  },
+  horizontalLine: {
+    left: 0,
+    right: 0,
+    height: 1
+  },
+  verticalLine: {
+    top: 0,
+    bottom: 0,
+    width: 1
+  },
+  gradientOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1
+  },
+  centerPinContainer: {
+    position: 'absolute',
+    top: '50%',
     left: '50%',
-    marginLeft: -16,
-    marginTop: -16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pinHalo: {
-    position: 'absolute',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.secondary,
-    opacity: 0.18,
+    marginTop: -40,
+    marginLeft: -20,
+    zIndex: 2,
+    alignItems: 'center'
   },
   pin: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: colors.secondary,
-    borderWidth: 3,
-    borderColor: colors.onSecondary,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#3B82F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5
   },
+  pinInner: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: 'white'
+  },
+  pinPoint: {
+    width: 2,
+    height: 16,
+    backgroundColor: '#3B82F6',
+    marginTop: -8
+  },
+  pinShadow: {
+    position: 'absolute',
+    bottom: -10,
+    width: 20,
+    height: 10,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    transform: [{ scaleX: 1.5 }]
+  }
 });

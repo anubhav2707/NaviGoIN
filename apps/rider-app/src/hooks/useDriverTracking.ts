@@ -1,98 +1,122 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { LatLng, interpolateLatLng } from '../types/geo';
+import { TripPhase } from '../components/TripMap';
 
-import { realtimeTrackUrl } from '../api/client';
-import type { Point } from '../navigation/types';
+interface UseDriverTrackingProps {
+  phase: TripPhase;
+  progress: number;
+  pickupLocation?: LatLng;
+  dropLocation?: LatLng;
+  enabled?: boolean;
+}
 
-export type TrackPhase = 'connecting' | 'arriving' | 'arrived' | 'on_trip' | 'completed' | 'offline';
+interface UseDriverTrackingResult {
+  driverLocation: LatLng;
+  routePath: LatLng[];
+  eta: number; // in minutes
+}
 
-export type DriverTracking = {
-  phase: TrackPhase;
-  progress: number; // 0..1 within the current leg
-  etaMin: number;
-  lat: number | null;
-  lng: number | null;
-  bearing: number;
-  connected: boolean;
+// Mock route coordinates for demo
+const MOCK_ROUTES = {
+  pickup: [
+    { lat: 28.6200, lng: 77.2100 },
+    { lat: 28.6180, lng: 77.2110 },
+    { lat: 28.6160, lng: 77.2100 },
+    { lat: 28.6140, lng: 77.2090 }
+  ],
+  trip: [
+    { lat: 28.6140, lng: 77.2090 },
+    { lat: 28.6120, lng: 77.2070 },
+    { lat: 28.6100, lng: 77.2050 },
+    { lat: 28.6080, lng: 77.2030 },
+    { lat: 28.6050, lng: 77.2000 }
+  ]
 };
 
-const INITIAL: DriverTracking = {
-  phase: 'connecting',
-  progress: 0,
-  etaMin: 0,
-  lat: null,
-  lng: null,
-  bearing: 0,
-  connected: false,
-};
+export function useDriverTracking({
+  phase,
+  progress,
+  pickupLocation = MOCK_ROUTES.pickup[MOCK_ROUTES.pickup.length - 1],
+  dropLocation = MOCK_ROUTES.trip[MOCK_ROUTES.trip.length - 1],
+  enabled = true
+}: UseDriverTrackingProps): UseDriverTrackingResult {
+  const [driverLocation, setDriverLocation] = useState<LatLng>(
+    MOCK_ROUTES.pickup[0]
+  );
+  const animationRef = useRef<NodeJS.Timeout>();
 
-/**
- * Subscribes to the backend's live trip telemetry over WebSocket. Falls back to
- * an "offline" phase if the socket can't connect (e.g. backend unreachable), so
- * the screen still renders sensible static content.
- */
-export function useDriverTracking(
-  tripId: string | undefined,
-  pickup: Point,
-  drop: Point,
-): DriverTracking {
-  const [state, setState] = useState<DriverTracking>(INITIAL);
-  const wsRef = useRef<WebSocket | null>(null);
+  // Generate route path based on phase
+  const routePath = (() => {
+    if (phase === 'pickup_arriving' || phase === 'pickup_reached') {
+      return MOCK_ROUTES.pickup;
+    } else {
+      return MOCK_ROUTES.trip;
+    }
+  })();
+
+  // Calculate ETA based on progress and phase
+  const eta = (() => {
+    if (phase === 'pickup_arriving') {
+      return Math.max(1, Math.round((1 - progress) * 8));
+    } else if (phase === 'trip_started') {
+      return Math.max(1, Math.round((1 - progress) * 15));
+    }
+    return 0;
+  })();
 
   useEffect(() => {
-    if (!tripId) {
-      setState((s) => ({ ...s, phase: 'offline' }));
-      return;
+    if (!enabled) return;
+
+    // Clear previous animation
+    if (animationRef.current) {
+      clearInterval(animationRef.current);
     }
 
-    let closedByUs = false;
-    const url = realtimeTrackUrl(tripId, {
-      plat: pickup.lat,
-      plng: pickup.lng,
-      dlat: drop.lat,
-      dlng: drop.lng,
-    });
+    // Animate driver location along the route
+    const route = phase === 'pickup_arriving' || phase === 'pickup_reached'
+      ? MOCK_ROUTES.pickup
+      : MOCK_ROUTES.trip;
 
-    let ws: WebSocket;
-    try {
-      ws = new WebSocket(url);
-    } catch {
-      setState((s) => ({ ...s, phase: 'offline' }));
-      return;
+    if (route.length < 2) return;
+
+    // Calculate position based on progress
+    const totalSegments = route.length - 1;
+    const currentSegmentFloat = progress * totalSegments;
+    const currentSegment = Math.floor(currentSegmentFloat);
+    const segmentProgress = currentSegmentFloat - currentSegment;
+
+    if (currentSegment < totalSegments) {
+      const start = route[currentSegment];
+      const end = route[Math.min(currentSegment + 1, route.length - 1)];
+      const interpolated = interpolateLatLng(start, end, segmentProgress);
+      setDriverLocation(interpolated);
+    } else {
+      // At destination
+      setDriverLocation(route[route.length - 1]);
     }
-    wsRef.current = ws;
 
-    ws.onopen = () => setState((s) => ({ ...s, connected: true }));
-    ws.onmessage = (event) => {
-      try {
-        const u = JSON.parse(event.data as string);
-        setState({
-          phase: u.phase,
-          progress: typeof u.progress === 'number' ? u.progress : 0,
-          etaMin: u.etaMin ?? 0,
-          lat: u.lat ?? null,
-          lng: u.lng ?? null,
-          bearing: u.bearing ?? 0,
-          connected: true,
-        });
-      } catch {
-        /* ignore malformed frames */
-      }
+    // Smooth animation for continuous movement
+    const animateMovement = () => {
+      animationRef.current = setInterval(() => {
+        // This would normally receive real-time updates from backend
+        // For demo, we just interpolate based on progress
+      }, 1000);
     };
-    ws.onerror = () => {
-      if (!closedByUs) setState((s) => ({ ...s, phase: s.connected ? s.phase : 'offline' }));
-    };
-    ws.onclose = () => {
-      if (!closedByUs) setState((s) => ({ ...s, connected: false }));
-    };
+
+    if (phase === 'pickup_arriving' || phase === 'trip_started') {
+      animateMovement();
+    }
 
     return () => {
-      closedByUs = true;
-      ws.close();
-      wsRef.current = null;
+      if (animationRef.current) {
+        clearInterval(animationRef.current);
+      }
     };
-    // Re-subscribe only when the trip changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tripId]);
+  }, [phase, progress, enabled, pickupLocation, dropLocation]);
 
-  return state;
+  return {
+    driverLocation,
+    routePath,
+    eta
+  };
 }
