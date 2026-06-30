@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import math
 import re
 from typing import Any
 
@@ -50,25 +51,37 @@ def truncate(text: str, limit: int = 4000) -> str:
 
 
 def clamp(n: float, min_val: float, max_val: float) -> float:
-    """Constrain a number to the [min_val, max_val] range.
-    
-    Returns min_val if n < min_val, max_val if n > max_val, else n.
+    """Clamp a number between min and max values.
     
     Args:
-        n: The number to clamp.
-        min_val: The minimum allowed value.
-        max_val: The maximum allowed value.
-        
+        n: The number to clamp
+        min_val: The minimum allowed value
+        max_val: The maximum allowed value
+    
     Returns:
-        The clamped value within [min_val, max_val].
-        
-    Raises:
-        ValueError: If min_val > max_val.
+        The clamped value between min_val and max_val
+    
+    Behavior for special cases:
+        - If n is NaN, returns NaN (propagates NaN)
+        - If min_val > max_val, returns min_val
+        - If any boundary is NaN, returns NaN
+    
+    Examples:
+        >>> clamp(5, 0, 10)
+        5
+        >>> clamp(-5, 0, 10)
+        0
+        >>> clamp(15, 0, 10)
+        10
+        >>> clamp(float('nan'), 0, 10)
+        nan
     """
+    # NaN handling: if any input is NaN, return NaN
+    if math.isnan(n) or math.isnan(min_val) or math.isnan(max_val):
+        return float('nan')
+    
+    # Handle case where min > max by returning min
     if min_val > max_val:
-        raise ValueError(f"min_val ({min_val}) must be <= max_val ({max_val})")
-    if n < min_val:
         return min_val
-    if n > max_val:
-        return max_val
-    return n
+    
+    return max(min_val, min(max_val, n))
