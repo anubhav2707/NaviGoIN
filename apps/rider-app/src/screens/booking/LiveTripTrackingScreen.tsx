@@ -1,420 +1,251 @@
-import React, { useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView
+} from 'react-native';
+import TripMap, { TripPhase } from '../../components/TripMap';
+import { LatLng } from '../../types/geo';
 
-import TripMap from '../../components/TripMap';
-import TopBar from '../../components/TopBar';
-import PrimaryButton from '../../components/PrimaryButton';
-import RazorpayCheckout, { type CheckoutOrder, type PaymentResult } from '../../components/RazorpayCheckout';
-import PaymentMethodSheet, { type PayMethod } from '../../components/PaymentMethodSheet';
-import UpiQrModal, { type UpiQr } from '../../components/UpiQrModal';
-import { api } from '../../api/client';
-import { useAuth } from '../../auth/AuthContext';
-import { useDriverTracking } from '../../hooks/useDriverTracking';
-import { callNumber, shareMessage, confirm } from '../../lib/actions';
-import { colors, elevation, radii, spacing, typography } from '../../theme/theme';
-import type { RootStackParamList } from '../../navigation/types';
+export default function LiveTripTrackingScreen({ navigation }: any) {
+  const [phase, setPhase] = useState<TripPhase>('pickup_arriving');
+  const [progress, setProgress] = useState(0);
+  const [eta, setEta] = useState(5);
 
-type Props = NativeStackScreenProps<RootStackParamList, 'LiveTripTracking'>;
+  // Mock locations
+  const pickupLocation: LatLng = { lat: 28.6139, lng: 77.2090 };
+  const dropLocation: LatLng = { lat: 28.6050, lng: 77.2000 };
 
-const DRIVER_NAME = 'Rajesh Kumar';
-const DRIVER_PHONE = '+919900000003';
-
-const PHASE_LABEL: Record<string, string> = {
-  connecting: 'Connecting…',
-  arriving: 'Driver on the way',
-  arrived: 'Driver has arrived',
-  on_trip: 'On the way to destination',
-  completed: 'Arrived at destination',
-  offline: 'On the way to destination',
-};
-
-export default function LiveTripTrackingScreen({ navigation, route }: Props) {
-  const { booking, ride, tripId } = route.params;
-  const { user } = useAuth();
-  const fare = Math.round(ride.fare);
-
-  // Live driver telemetry over WebSocket.
-  const tracking = useDriverTracking(tripId, booking.pickup, booking.drop);
-  const overallProgress =
-    tracking.phase === 'on_trip'
-      ? 0.5 + tracking.progress * 0.5
-      : tracking.phase === 'completed'
-        ? 1
-        : tracking.progress * 0.5;
-
-  const [completing, setCompleting] = useState(false);
-  const [methodSheet, setMethodSheet] = useState(false);
-  const [order, setOrder] = useState<CheckoutOrder | null>(null);
-  const [upiQr, setUpiQr] = useState<UpiQr | null>(null);
-  const [qrVisible, setQrVisible] = useState(false);
-
-  const triggerSOS = () =>
-    confirm(
-      'Emergency SOS',
-      'This will call local emergency services (100) and alert your trusted contacts.',
-      () => callNumber('100'),
-      'Call 100',
-    );
-
-  const shareStatus = () =>
-    shareMessage(
-      `I'm on a RideNow trip with ${DRIVER_NAME} (MH01 AX 4592). Heading to ${booking.dropLabel}. ETA ~12 mins.`,
-    );
-
+  // Simulate trip progression
   useEffect(() => {
-    // Driver has picked up — trip is now underway.
-    if (tripId) {
-      api.updateTripStatus(tripId, 'in_progress').catch(() => {});
-    }
-  }, [tripId]);
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        const newProgress = Math.min(prev + 0.05, 1);
+        
+        // Update phase based on progress
+        if (phase === 'pickup_arriving' && newProgress >= 1) {
+          setPhase('pickup_reached');
+          setTimeout(() => {
+            setPhase('trip_started');
+            setProgress(0);
+          }, 3000);
+        } else if (phase === 'trip_started' && newProgress >= 0.9) {
+          setPhase('trip_ending');
+        }
 
-  const finishTrip = async () => {
-    try {
-      if (tripId) await api.updateTripStatus(tripId, 'completed');
-    } catch {
-      /* even if the backend is unreachable, let the rider exit the flow */
-    } finally {
-      navigation.popToTop();
+        return newProgress;
+      });
+
+      setEta(prev => Math.max(0, prev - 1));
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [phase]);
+
+  const getStatusText = () => {
+    switch (phase) {
+      case 'pickup_arriving':
+        return 'Driver is arriving';
+      case 'pickup_reached':
+        return 'Driver has arrived';
+      case 'trip_started':
+        return 'On the way';
+      case 'trip_ending':
+        return 'Arriving at destination';
     }
   };
-
-  const openPaymentMethods = () => setMethodSheet(true);
-
-  const onSelectMethod = async (method: PayMethod) => {
-    setMethodSheet(false);
-    switch (method) {
-      case 'cash':
-        setCompleting(true);
-        try {
-          if (tripId && user) await api.chargeCash(tripId, user.id, fare);
-        } catch {
-          /* offline — still let the rider finish */
-        }
-        await finishTrip();
-        break;
-
-      case 'online':
-        setCompleting(true);
-        try {
-          const created = await api.createPaymentOrder(ride.fare, tripId, user?.id);
-          if (created.mock || !created.keyId) {
-            await finishTrip();
-            return;
-          }
-          setOrder({
-            chargeId: created.chargeId,
-            orderId: created.orderId,
-            amount: created.amount,
-            currency: created.currency,
-            keyId: created.keyId,
-          });
-        } catch {
-          await finishTrip();
-        } finally {
-          setCompleting(false);
-        }
-        break;
-
-      case 'qr':
-        setQrVisible(true);
-        setUpiQr(null);
-        try {
-          const res = await api.createUpiQr(ride.fare, tripId);
-          setUpiQr({ qrPngB64: res.qrPngB64, payeeVpa: res.payeeVpa, amount: res.amount });
-        } catch {
-          setQrVisible(false);
-          Alert.alert('Could not generate QR', 'Please try another payment method.');
-        }
-        break;
-    }
-  };
-
-  const onPaymentSuccess = async (result: PaymentResult) => {
-    const current = order;
-    setOrder(null);
-    try {
-      if (current) {
-        await api.verifyPayment({
-          chargeId: current.chargeId,
-          orderId: result.orderId,
-          paymentId: result.paymentId,
-          signature: result.signature,
-        });
-      }
-    } catch {
-      /* verification failed server-side; still let the rider exit */
-    }
-    await finishTrip();
-  };
-
-  const etaText = tracking.phase === 'completed' ? 'Arrived' : `${tracking.etaMin || 1} mins`;
 
   return (
-    <View style={styles.root}>
-      <TripMap phase={tracking.phase} progress={tracking.progress} />
-
-      <TopBar
-        variant="transparent"
-        backIcon="close"
-        onBack={() => navigation.popToTop()}
-        right={
-          <View style={[styles.etaPill, elevation.level1]}>
-            <View style={[styles.liveDot, { backgroundColor: tracking.connected ? colors.success : colors.outline }]} />
-            <Text style={styles.etaText}>{etaText}</Text>
-          </View>
-        }
+    <SafeAreaView style={styles.container}>
+      <TripMap
+        phase={phase}
+        progress={progress}
+        pickupLocation={pickupLocation}
+        dropLocation={dropLocation}
       />
-
-      {/* Side controls */}
-      <View style={styles.sideControls}>
-        <TouchableOpacity
-          style={[styles.sideButton, elevation.level1]}
-          onPress={() => navigation.navigate('EmergencySettings')}
-          activeOpacity={0.8}
-        >
-          <MaterialIcons name="shield" size={22} color={colors.primary} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.sideButton, elevation.level1]}
-          onPress={shareStatus}
-          activeOpacity={0.8}
-        >
-          <MaterialIcons name="share" size={22} color={colors.primary} />
-        </TouchableOpacity>
-      </View>
-
-      <View style={[styles.sheet, elevation.level2]}>
-        <View style={styles.dragHandle} />
-
-        {/* Live status banner */}
-        <View style={styles.statusRow}>
-          <View style={[styles.liveDot, { backgroundColor: tracking.connected ? colors.success : colors.outline }]} />
-          <Text style={styles.statusText}>{PHASE_LABEL[tracking.phase] ?? 'Tracking…'}</Text>
-          {tracking.phase !== 'completed' && (
-            <Text style={styles.statusEta}>· {tracking.etaMin || 1} min</Text>
-          )}
+      
+      <View style={styles.overlay}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
+            <Text style={styles.backText}>←</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Driver row */}
-        <View style={styles.driverRow}>
-          <View style={styles.driverLeft}>
+        <View style={styles.statusCard}>
+          <Text style={styles.statusText}>{getStatusText()}</Text>
+          <View style={styles.etaContainer}>
+            <Text style={styles.etaLabel}>ETA</Text>
+            <Text style={styles.etaValue}>{eta} min</Text>
+          </View>
+          
+          <View style={styles.driverInfo}>
             <View style={styles.driverAvatar}>
-              <MaterialIcons name="person" size={28} color={colors.onSurfaceVariant} />
-              <View style={styles.starBadge}>
-                <MaterialIcons name="star" size={12} color={colors.onPrimary} />
-              </View>
+              <Text style={styles.driverInitial}>D</Text>
             </View>
-            <View>
-              <Text style={styles.driverName}>Rajesh Kumar</Text>
-              <Text style={styles.driverCar}>White Maruti Dzire • MH01 AX 4592</Text>
+            <View style={styles.driverDetails}>
+              <Text style={styles.driverName}>Driver Name</Text>
+              <Text style={styles.vehicleInfo}>White Toyota Camry • ABC-1234</Text>
             </View>
           </View>
-          <View style={styles.commRow}>
-            <TouchableOpacity style={styles.commButton} onPress={() => callNumber(DRIVER_PHONE)} activeOpacity={0.7}>
-              <MaterialIcons name="call" size={20} color={colors.primary} />
+
+          <View style={styles.actions}>
+            <TouchableOpacity style={styles.actionButton}>
+              <Text style={styles.actionText}>Call</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.commButton}
-              onPress={() => navigation.navigate('DriverChat', { driverName: DRIVER_NAME })}
-              activeOpacity={0.7}
-            >
-              <MaterialIcons name="chat" size={20} color={colors.primary} />
+            <TouchableOpacity style={styles.actionButton}>
+              <Text style={styles.actionText}>Message</Text>
             </TouchableOpacity>
+            {phase === 'pickup_reached' && (
+              <TouchableOpacity
+                style={[styles.actionButton, styles.primaryAction]}
+                onPress={() => {
+                  setPhase('trip_started');
+                  setProgress(0);
+                }}
+              >
+                <Text style={[styles.actionText, styles.primaryActionText]}>I'm here</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
-
-        {/* Trip progress */}
-        <View style={styles.progressBlock}>
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${Math.round(overallProgress * 100)}%` }]} />
-          </View>
-          <View style={styles.progressLabels}>
-            <Text style={styles.progressLabel}>Pickup: {booking.pickupLabel.split(',')[0]}</Text>
-            <Text style={styles.progressLabel}>Drop: {booking.dropLabel.split(',')[0]}</Text>
-          </View>
-        </View>
-
-        {/* SOS + Share */}
-        <View style={styles.actionRow}>
-          <PrimaryButton label="SOS" icon="emergency" variant="error" style={styles.actionBtn} onPress={triggerSOS} />
-          <PrimaryButton label="Share Status" icon="share" style={styles.actionBtn} onPress={shareStatus} />
-        </View>
-
-        {/* Trip stats */}
-        <View style={styles.statsRow}>
-          <View style={styles.stat}>
-            <Text style={styles.statLabel}>Distance</Text>
-            <Text style={styles.statValue}>{booking.distanceKm} km</Text>
-          </View>
-          <View style={[styles.stat, styles.statMiddle]}>
-            <Text style={styles.statLabel}>Fare</Text>
-            <Text style={styles.statValue}>₹{Math.round(ride.fare)}</Text>
-          </View>
-          <View style={styles.stat}>
-            <Text style={styles.statLabel}>OTP</Text>
-            <Text style={[styles.statValue, { color: colors.secondary }]}>8842</Text>
-          </View>
-        </View>
-
-        <PrimaryButton
-          label={`Pay ₹${fare} & Complete`}
-          icon="lock"
-          loading={completing}
-          onPress={openPaymentMethods}
-          style={{ marginTop: spacing.md }}
-        />
       </View>
-
-      <PaymentMethodSheet
-        visible={methodSheet}
-        amount={ride.fare}
-        onSelect={onSelectMethod}
-        onClose={() => setMethodSheet(false)}
-      />
-
-      <RazorpayCheckout
-        order={order}
-        prefill={{ name: user?.name, contact: user?.phone }}
-        onSuccess={onPaymentSuccess}
-        onDismiss={() => setOrder(null)}
-        onError={(msg) => {
-          setOrder(null);
-          Alert.alert('Payment failed', msg);
-        }}
-      />
-
-      <UpiQrModal
-        visible={qrVisible}
-        qr={upiQr}
-        onPaid={() => {
-          setQrVisible(false);
-          finishTrip();
-        }}
-        onClose={() => setQrVisible(false)}
-      />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  etaPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    backgroundColor: colors.surfaceContainerLowest,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radii.full,
+  container: {
+    flex: 1
   },
-  etaText: { ...typography.labelMd, color: colors.primary },
-  liveDot: { width: 8, height: 8, borderRadius: 4 },
-  statusRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.md },
-  statusText: { ...typography.bodyMd, color: colors.primary, fontWeight: '600' },
-  statusEta: { ...typography.bodyMd, color: colors.onSurfaceVariant },
-  sideControls: {
+  overlay: {
     position: 'absolute',
-    right: spacing.marginMobile,
-    top: '42%',
-    gap: spacing.md,
-  },
-  sideButton: {
-    width: 48,
-    height: 48,
-    borderRadius: radii.full,
-    backgroundColor: colors.surfaceContainerLowest,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  sheet: {
-    position: 'absolute',
+    top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: colors.surfaceContainerLowest,
-    borderTopLeftRadius: radii.xl,
-    borderTopRightRadius: radii.xl,
-    paddingHorizontal: spacing.marginMobile,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.xl,
-    gap: spacing.md,
+    pointerEvents: 'box-none'
   },
-  dragHandle: {
-    width: 48,
-    height: 4,
-    borderRadius: radii.full,
-    backgroundColor: colors.surfaceVariant,
-    alignSelf: 'center',
-    marginBottom: spacing.xs,
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 20
   },
-  driverRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  driverLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  driverAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: radii.full,
-    backgroundColor: colors.surfaceContainerHigh,
-    alignItems: 'center',
+  backButton: {
+    width: 40,
+    height: 40,
+    backgroundColor: 'white',
+    borderRadius: 20,
     justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3
   },
-  starBadge: {
+  backText: {
+    fontSize: 24,
+    color: '#111827'
+  },
+  statusCard: {
     position: 'absolute',
-    bottom: -2,
-    right: -2,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.secondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: colors.surfaceContainerLowest,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'white',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5
   },
-  driverName: { ...typography.headlineSm, color: colors.primary },
-  driverCar: { ...typography.bodySm, color: colors.onSurfaceVariant },
-  commRow: { flexDirection: 'row', gap: spacing.sm },
-  commButton: {
-    width: 44,
-    height: 44,
-    borderRadius: radii.full,
-    backgroundColor: colors.surfaceContainerLow,
-    alignItems: 'center',
-    justifyContent: 'center',
+  statusText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 8
   },
-
-  progressBlock: { gap: spacing.sm },
-  progressTrack: {
-    height: 6,
-    backgroundColor: colors.surfaceContainer,
-    borderRadius: radii.full,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: colors.secondary,
-    borderRadius: radii.full,
-  },
-  progressLabels: { flexDirection: 'row', justifyContent: 'space-between' },
-  progressLabel: { ...typography.labelMd, color: colors.onSurfaceVariant },
-
-  actionRow: { flexDirection: 'row', gap: spacing.sm },
-  actionBtn: { flex: 1 },
-
-  statsRow: {
+  etaContainer: {
     flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20
+  },
+  etaLabel: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginRight: 8
+  },
+  etaValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#3B82F6'
+  },
+  driverInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: colors.surfaceVariant,
-    paddingTop: spacing.sm,
+    borderTopColor: '#f3f4f6',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6'
   },
-  stat: { flex: 1, alignItems: 'center', paddingVertical: spacing.sm },
-  statMiddle: {
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderColor: colors.surfaceVariant,
+  driverAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#e5e7eb',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12
   },
-  statLabel: { ...typography.labelMd, color: colors.onSurfaceVariant },
-  statValue: { ...typography.bodyMd, color: colors.primary, fontWeight: '700' },
+  driverInitial: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#6b7280'
+  },
+  driverDetails: {
+    flex: 1
+  },
+  driverName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#111827',
+    marginBottom: 2
+  },
+  vehicleInfo: {
+    fontSize: 14,
+    color: '#6b7280'
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 20
+  },
+  actionButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    alignItems: 'center'
+  },
+  primaryAction: {
+    backgroundColor: '#3B82F6',
+    borderColor: '#3B82F6'
+  },
+  actionText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151'
+  },
+  primaryActionText: {
+    color: 'white'
+  }
 });
