@@ -1,60 +1,29 @@
 /**
- * Validators module for phone number validation
+ * Validates that input contains only numeric digits
+ * @param input - The string to validate
+ * @returns true if valid, false otherwise
  */
-
-/**
- * Validates Indian mobile phone numbers.
- * 
- * Valid Indian mobile numbers:
- * - 10 digits only (after removing country code and formatting)
- * - First digit must be 6, 7, 8, or 9
- * - Can have +91 country code prefix
- * - Can have spaces or hyphens as separators
- * 
- * @param phone - The phone number string to validate
- * @returns true if valid Indian mobile number, false otherwise
- * 
- * @example
- * isValidIndianMobile('9876543210') // true
- * isValidIndianMobile('+919876543210') // true
- * isValidIndianMobile('+91 98765 43210') // true
- * isValidIndianMobile('5876543210') // false (starts with 5)
- * isValidIndianMobile('98765432') // false (too short)
- */
-export function isValidIndianMobile(phone: string): boolean {
-  if (!phone || typeof phone !== 'string') {
+export function validateNumericInput(input: string): boolean {
+  // Reject empty strings
+  if (!input || input.length === 0) {
     return false;
   }
 
-  // Remove all whitespace, hyphens, parentheses, and dots
-  let cleaned = phone.replace(/[\s\-()\.]*/g, '');
-
-  // Remove country code prefix if present
-  if (cleaned.startsWith('+91')) {
-    cleaned = cleaned.substring(3);
-  } else if (cleaned.startsWith('91') && cleaned.length === 12) {
-    // Handle 91XXXXXXXXXX format
-    cleaned = cleaned.substring(2);
-  } else if (cleaned.startsWith('0091')) {
-    // Handle 0091XXXXXXXXXX format
-    cleaned = cleaned.substring(4);
-  }
-
-  // Must be exactly 10 digits
-  if (cleaned.length !== 10) {
-    return false;
-  }
-
-  // Must contain only digits
-  if (!/^\d+$/.test(cleaned)) {
-    return false;
-  }
-
-  // First digit must be 6, 7, 8, or 9
-  const firstDigit = parseInt(cleaned[0], 10);
-  if (firstDigit < 6 || firstDigit > 9) {
+  // Reject inputs containing non-digit characters
+  // This will catch cases like '98765-43210', '123.45', '12a34', etc.
+  if (!/^\d+$/.test(input)) {
     return false;
   }
 
   return true;
+}
+
+/**
+ * Validates phone number format
+ * @param phoneNumber - The phone number to validate
+ * @returns true if valid, false otherwise
+ */
+export function validatePhoneNumber(phoneNumber: string): boolean {
+  // Must be exactly 10 digits, no other characters allowed
+  return /^\d{10}$/.test(phoneNumber);
 }
