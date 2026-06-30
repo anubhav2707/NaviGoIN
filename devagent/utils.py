@@ -1,19 +1,28 @@
 
 
-def clamp(n: float, min_val: float, max_val: float) -> float:
-    """Clamp a number to be within a given range.
+def clamp(value: float, min_value: float, max_value: float) -> float:
+    """Clamp a value between min and max bounds (inclusive).
+    
+    This is a pure function that does not mutate any inputs.
     
     Args:
-        n: The number to clamp
-        min_val: The minimum allowed value
-        max_val: The maximum allowed value
+        value: The value to clamp
+        min_value: The minimum allowed value
+        max_value: The maximum allowed value
         
     Returns:
-        The clamped value
+        The clamped value between min_value and max_value
         
-    Raises:
-        ValueError: If min_val > max_val (inverted range)
+    Examples:
+        >>> clamp(5, 0, 10)
+        5
+        >>> clamp(-5, 0, 10)
+        0
+        >>> clamp(15, 0, 10)
+        10
+        >>> clamp(0.5, 0.0, 1.0)
+        0.5
+        >>> clamp(1.5, 0.0, 1.0)
+        1.0
     """
-    if min_val > max_val:
-        raise ValueError(f"Invalid range: min ({min_val}) cannot be greater than max ({max_val})")
-    return max(min_val, min(n, max_val))
+    return max(min_value, min(value, max_value))
