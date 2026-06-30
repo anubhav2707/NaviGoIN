@@ -1,172 +1,242 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Animated, LayoutChangeEvent, StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialIcons } from '@expo/vector-icons';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import {
+  View,
+  StyleSheet,
+  Animated,
+  Easing
+} from 'react-native';
+import MapplsWebMap from './MapplsWebMap';
+import { isMapplsConfigured } from '../config/mappls';
+import { LatLng, MapMarker, interpolateLatLng } from '../types/geo';
+import { useDriverTracking } from '../hooks/useDriverTracking';
 
-import { colors } from '../theme/theme';
-import type { TrackPhase } from '../hooks/useDriverTracking';
+export type TripPhase = 'pickup_arriving' | 'pickup_reached' | 'trip_started' | 'trip_ending';
 
-type Props = { phase: TrackPhase; progress: number };
-
-type Anchor = { x: number; y: number }; // fractions of the container (0..1)
-
-// Fixed stylised anchors — replaced by real projected coordinates once a map
-// SDK is wired in. The car interpolates between these based on phase/progress.
-const DRIVER_START: Anchor = { x: 0.8, y: 0.2 };
-const PICKUP: Anchor = { x: 0.52, y: 0.46 };
-const DROP: Anchor = { x: 0.26, y: 0.74 };
-
-function lerp(a: Anchor, b: Anchor, t: number): Anchor {
-  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+interface TripMapProps {
+  phase: TripPhase;
+  progress: number; // 0 to 1
+  pickupLocation?: LatLng;
+  dropLocation?: LatLng;
+  driverLocation?: LatLng;
+  routePath?: LatLng[];
+  onDriverLocationUpdate?: (location: LatLng) => void;
 }
 
-function carAnchor(phase: TrackPhase, progress: number): Anchor {
-  switch (phase) {
-    case 'arriving':
-    case 'connecting':
-      return lerp(DRIVER_START, PICKUP, progress);
-    case 'arrived':
-      return PICKUP;
-    case 'on_trip':
-      return lerp(PICKUP, DROP, progress);
-    case 'completed':
-      return DROP;
-    default:
-      return DRIVER_START;
-  }
-}
+export default function TripMap({
+  phase,
+  progress,
+  pickupLocation,
+  dropLocation,
+  driverLocation: propDriverLocation,
+  routePath: propRoutePath,
+  onDriverLocationUpdate
+}: TripMapProps) {
+  // Use mock driver tracking if no real location provided
+  const mockTracking = useDriverTracking({
+    phase,
+    progress,
+    pickupLocation,
+    dropLocation,
+    enabled: !propDriverLocation
+  });
 
-/** Absolutely-positioned rotated line connecting two pixel points. */
-function Line({ from, to, color, dashed }: { from: Anchor; to: Anchor; color: string; dashed?: boolean }) {
-  const dx = to.x - from.x;
-  const dy = to.y - from.y;
-  const length = Math.hypot(dx, dy);
-  const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
-  return (
-    <View
-      style={{
-        position: 'absolute',
-        left: from.x,
-        top: from.y,
-        width: length,
-        height: 0,
-        borderTopWidth: 3,
-        borderColor: color,
-        borderStyle: dashed ? 'dashed' : 'solid',
-        transform: [{ translateY: -1.5 }, { rotateZ: `${angle}deg` }],
-        transformOrigin: 'left center',
-      }}
-    />
-  );
-}
+  const driverLocation = propDriverLocation || mockTracking.driverLocation;
+  const routePath = propRoutePath || mockTracking.routePath;
 
-export default function TripMap({ phase, progress }: Props) {
-  const [size, setSize] = useState({ w: 0, h: 0 });
-  const car = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
-  const initialised = useRef(false);
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
-  const toPx = (a: Anchor) => ({ x: a.x * size.w, y: a.y * size.h });
-
-  const onLayout = (e: LayoutChangeEvent) => {
-    const { width, height } = e.nativeEvent.layout;
-    setSize({ w: width, h: height });
-  };
-
-  // Animate the car toward its target whenever phase/progress change.
-  useEffect(() => {
-    if (size.w === 0) return;
-    const target = toPx(carAnchor(phase, progress));
-    if (!initialised.current) {
-      car.setValue(target);
-      initialised.current = true;
-      return;
+  // Calculate map center based on phase
+  const mapCenter = useMemo(() => {
+    if (phase === 'pickup_arriving' || phase === 'pickup_reached') {
+      return pickupLocation || driverLocation;
+    } else if (phase === 'trip_started' || phase === 'trip_ending') {
+      // Center between driver and drop location
+      if (driverLocation && dropLocation) {
+        return {
+          lat: (driverLocation.lat + dropLocation.lat) / 2,
+          lng: (driverLocation.lng + dropLocation.lng) / 2
+        };
+      }
+      return dropLocation || driverLocation;
     }
-    Animated.timing(car, {
-      toValue: target,
-      duration: 1100,
-      useNativeDriver: false,
-    }).start();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, progress, size.w, size.h]);
+    return driverLocation;
+  }, [phase, pickupLocation, dropLocation, driverLocation]);
 
-  const pickupPx = toPx(PICKUP);
-  const dropPx = toPx(DROP);
-  const startPx = toPx(DRIVER_START);
+  // Generate markers based on phase
+  const markers = useMemo((): MapMarker[] => {
+    const markersList: MapMarker[] = [];
+
+    // Driver marker (always visible)
+    if (driverLocation) {
+      markersList.push({
+        id: 'driver',
+        position: driverLocation,
+        kind: 'driver',
+        title: 'Driver',
+        description: phase === 'pickup_reached' ? 'Waiting for you' : 'On the way'
+      });
+    }
+
+    // Pickup marker (visible until trip starts)
+    if (pickupLocation && (phase === 'pickup_arriving' || phase === 'pickup_reached')) {
+      markersList.push({
+        id: 'pickup',
+        position: pickupLocation,
+        kind: 'pickup',
+        title: 'Pickup',
+        description: 'Your pickup location'
+      });
+    }
+
+    // Drop marker (visible after trip starts)
+    if (dropLocation && (phase === 'trip_started' || phase === 'trip_ending')) {
+      markersList.push({
+        id: 'drop',
+        position: dropLocation,
+        kind: 'drop',
+        title: 'Drop',
+        description: 'Your destination'
+      });
+    }
+
+    return markersList;
+  }, [phase, pickupLocation, dropLocation, driverLocation]);
+
+  // Animate driver marker on phase change
+  useEffect(() => {
+    if (phase === 'pickup_reached') {
+      // Pulse animation when driver arrives
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(scaleAnim, {
+            toValue: 1.2,
+            duration: 1000,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true
+          }),
+          Animated.timing(scaleAnim, {
+            toValue: 1,
+            duration: 1000,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true
+          })
+        ])
+      ).start();
+    } else {
+      scaleAnim.setValue(1);
+    }
+  }, [phase, scaleAnim]);
+
+  // Fade transition on phase change
+  useEffect(() => {
+    Animated.sequence([
+      Animated.timing(fadeAnim, {
+        toValue: 0.7,
+        duration: 200,
+        useNativeDriver: true
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true
+      })
+    ]).start();
+  }, [phase, fadeAnim]);
+
+  // Notify parent of driver location updates
+  useEffect(() => {
+    if (driverLocation && onDriverLocationUpdate) {
+      onDriverLocationUpdate(driverLocation);
+    }
+  }, [driverLocation, onDriverLocationUpdate]);
+
+  // Calculate zoom based on phase
+  const zoom = useMemo(() => {
+    if (phase === 'pickup_arriving') return 15;
+    if (phase === 'pickup_reached') return 17;
+    if (phase === 'trip_started') return 14;
+    if (phase === 'trip_ending') return 16;
+    return 15;
+  }, [phase]);
+
+  // Render map or fallback
+  if (!isMapplsConfigured()) {
+    // Fallback visualization without real map
+    return (
+      <View style={styles.container}>
+        <View style={styles.fallbackMap}>
+          <View style={styles.fallbackContent}>
+            {/* Animated driver indicator */}
+            <Animated.View
+              style={[
+                styles.driverIndicator,
+                {
+                  opacity: fadeAnim,
+                  transform: [{ scale: scaleAnim }]
+                }
+              ]}
+            />
+            {/* Progress bar */}
+            <View style={styles.progressBar}>
+              <View
+                style={[
+                  styles.progressFill,
+                  { width: `${progress * 100}%` }
+                ]}
+              />
+            </View>
+          </View>
+        </View>
+      </View>
+    );
+  }
 
   return (
-    <View style={StyleSheet.absoluteFill} onLayout={onLayout}>
-      <View style={styles.surface} />
-
-      {size.w > 0 && (
-        <>
-          {/* Route legs */}
-          <Line from={startPx} to={pickupPx} color={colors.outlineVariant} dashed />
-          <Line from={pickupPx} to={dropPx} color={colors.secondary} />
-
-          {/* Pickup (blue dot) */}
-          <View style={[styles.marker, { left: pickupPx.x - 8, top: pickupPx.y - 8 }]}>
-            <View style={styles.pickupDot} />
-          </View>
-          {/* Drop (black square) */}
-          <View style={[styles.marker, { left: dropPx.x - 7, top: dropPx.y - 7 }]}>
-            <View style={styles.dropSquare} />
-          </View>
-
-          {/* Animated car */}
-          <Animated.View
-            style={[
-              styles.car,
-              { transform: [{ translateX: Animated.subtract(car.x, 18) }, { translateY: Animated.subtract(car.y, 18) }] },
-            ]}
-          >
-            <View style={styles.carHalo} />
-            <View style={styles.carBadge}>
-              <MaterialIcons name="local-taxi" size={20} color={colors.onPrimary} />
-            </View>
-          </Animated.View>
-        </>
-      )}
-
-      {/* Top + bottom fades so UI overlays stay legible */}
-      <LinearGradient
-        colors={['rgba(249,249,249,0.85)', 'rgba(249,249,249,0)', 'rgba(249,249,249,0)', 'rgba(249,249,249,0.95)']}
-        locations={[0, 0.2, 0.78, 1]}
+    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+      <MapplsWebMap
+        center={mapCenter}
+        zoom={zoom}
+        markers={markers}
+        routePath={routePath}
         style={StyleSheet.absoluteFill}
-        pointerEvents="none"
       />
-    </View>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  surface: { flex: 1, backgroundColor: colors.surfaceDim },
-  marker: { position: 'absolute' },
-  pickupDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: colors.secondary,
-    borderWidth: 3,
-    borderColor: colors.onSecondary,
+  container: {
+    flex: 1
   },
-  dropSquare: { width: 14, height: 14, backgroundColor: colors.primary, borderWidth: 2, borderColor: colors.onPrimary },
-  car: { position: 'absolute', width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  carHalo: {
-    position: 'absolute',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.secondary,
-    opacity: 0.18,
-  },
-  carBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
+  fallbackMap: {
+    flex: 1,
+    backgroundColor: '#e5e7eb',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: colors.onPrimary,
+    alignItems: 'center'
   },
+  fallbackContent: {
+    width: '80%',
+    alignItems: 'center'
+  },
+  driverIndicator: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#3B82F6',
+    marginBottom: 32
+  },
+  progressBar: {
+    width: '100%',
+    height: 8,
+    backgroundColor: '#d1d5db',
+    borderRadius: 4,
+    overflow: 'hidden'
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#3B82F6',
+    borderRadius: 4
+  }
 });
