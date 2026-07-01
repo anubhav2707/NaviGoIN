@@ -1,47 +1,95 @@
 package httpserver
 
 import (
-	"encoding/json"
+	"database/sql"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/gin-gonic/gin"
+	"github.com/gin-contrib/cors"
+	
+	"anubhav2707/NaviGoIn/apps/api/internal/identity"
+	"anubhav2707/NaviGoIn/apps/api/internal/driver"
+	"anubhav2707/NaviGoIn/apps/api/internal/location"
+	"anubhav2707/NaviGoIn/apps/api/internal/matching"
+	"anubhav2707/NaviGoIn/apps/api/internal/notifications"
+	"anubhav2707/NaviGoIn/apps/api/internal/payments"
+	"anubhav2707/NaviGoIn/apps/api/internal/pricing"
+	"anubhav2707/NaviGoIn/apps/api/internal/ratings"
+	"anubhav2707/NaviGoIn/apps/api/internal/realtime"
+	"anubhav2707/NaviGoIn/apps/api/internal/trip"
 )
 
-// Module is anything that owns a slice of the API surface (one per service
-// boundary: identity, driver, location, matching, trip, ...). Each module
-// mounts its own routes under its own prefix and only talks to other modules
-// through their exported service interfaces — never through shared tables.
-type Module interface {
-	Name() string
-	MountRoutes(r chi.Router)
+// Router represents the HTTP router with all modules
+type Router struct {
+	engine *gin.Engine
+	db     *sql.DB
 }
 
-func NewRouter(modules ...Module) http.Handler {
-	r := chi.NewRouter()
+// NewRouter creates a new HTTP router with all modules initialized
+func NewRouter(db *sql.DB) *Router {
+	gin.SetMode(gin.ReleaseMode)
+	engine := gin.New()
+	
+	// Add middleware
+	engine.Use(gin.Logger())
+	engine.Use(gin.Recovery())
+	engine.Use(cors.Default())
+	
+	return &Router{
+		engine: engine,
+		db:     db,
+	}
+}
 
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-
-	r.Get("/healthz", healthCheck)
-
-	r.Route("/v1", func(api chi.Router) {
-		for _, m := range modules {
-			api.Route("/"+m.Name(), m.MountRoutes)
-		}
+// SetupRoutes initializes all API routes
+func (r *Router) SetupRoutes() {
+	// Health check endpoint
+	r.engine.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "healthy"})
 	})
-
-	return r
+	
+	// API v1 routes
+	v1 := r.engine.Group("/api/v1")
+	{
+		// Initialize and register all modules
+		identityModule := identity.NewModule(r.db)
+		identityModule.RegisterRoutes(v1)
+		
+		driverModule := driver.NewModule(r.db)
+		driverModule.RegisterRoutes(v1)
+		
+		locationModule := location.NewModule(r.db)
+		locationModule.RegisterRoutes(v1)
+		
+		matchingModule := matching.NewModule(r.db)
+		matchingModule.RegisterRoutes(v1)
+		
+		notificationsModule := notifications.NewModule(r.db)
+		notificationsModule.RegisterRoutes(v1)
+		
+		paymentsModule := payments.NewModule(r.db)
+		paymentsModule.RegisterRoutes(v1)
+		
+		pricingModule := pricing.NewModule(r.db)
+		pricingModule.RegisterRoutes(v1)
+		
+		ratingsModule := ratings.NewModule(r.db)
+		ratingsModule.RegisterRoutes(v1)
+		
+		realtimeModule := realtime.NewModule(r.db)
+		realtimeModule.RegisterRoutes(v1)
+		
+		tripModule := trip.NewModule(r.db)
+		tripModule.RegisterRoutes(v1)
+	}
 }
 
-func healthCheck(w http.ResponseWriter, r *http.Request) {
-	WriteJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+// Run starts the HTTP server
+func (r *Router) Run(addr string) error {
+	return r.engine.Run(addr)
 }
 
-func WriteJSON(w http.ResponseWriter, status int, payload any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(payload)
+// GetEngine returns the underlying gin engine (useful for testing)
+func (r *Router) GetEngine() *gin.Engine {
+	return r.engine
 }
