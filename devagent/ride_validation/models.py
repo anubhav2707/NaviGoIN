@@ -1,146 +1,201 @@
-"""Domain models for ride booking validation."""
+"""Data models for ride validation system."""
 
-from __future__ import annotations
-
-import enum
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Optional
-
-from pydantic import BaseModel, Field, field_validator
-
-
-class RideState(str, enum.Enum):
-    """Ride lifecycle states."""
-
-    REQUESTED = "requested"
-    ACCEPTED = "accepted"
-    ARRIVED = "arrived"
-    IN_PROGRESS = "in_progress"
-    COMPLETED = "completed"
-    CANCELLED = "cancelled"
+from typing import List, Optional, Dict, Any
+from enum import Enum
 
 
-class AnomalyType(str, enum.Enum):
-    """Types of detected anomalies."""
+class AnomalyType(Enum):
+    """Types of anomalies detected in ride data."""
+    FARE_ANOMALY = "fare_anomaly"
+    ROUTE_ANOMALY = "route_anomaly"
+    DISTANCE_ANOMALY = "distance_anomaly"
+    DURATION_ANOMALY = "duration_anomaly"
+    SPEED_ANOMALY = "speed_anomaly"
+    DUPLICATE_REQUEST = "duplicate_request"
+    
 
-    TELEMETRY_ANOMALY = "TELEMETRY_ANOMALY"  # GPS teleportation
-    ROUTE_DEV_OUTLIER = "ROUTE_DEV_OUTLIER"  # Excessive route deviation
-    FARE_MISMATCH = "FARE_MISMATCH"  # Large fare discrepancy
-    STATE_VIOLATION = "STATE_VIOLATION"  # Invalid state transition
-    TIME_ANOMALY = "TIME_ANOMALY"  # Unrealistic time metrics
+class ValidationStatus(Enum):
+    """Validation status for rides."""
+    PENDING = "pending"
+    VALID = "valid"
+    INVALID = "invalid"
+    FLAGGED = "flagged"
+    
 
-
-class GPSPoint(BaseModel):
-    """GPS telemetry point."""
-
-    latitude: float = Field(ge=-90, le=90)
-    longitude: float = Field(ge=-180, le=180)
-    timestamp: datetime
-    accuracy: float = Field(ge=0)  # meters
-    speed: Optional[float] = Field(default=None, ge=0)  # km/h
-
-    @field_validator("latitude", "longitude")
-    @classmethod
-    def validate_coordinates(cls, v: float, info) -> float:
-        if info.field_name == "latitude" and not (-90 <= v <= 90):
-            raise ValueError(f"Invalid latitude: {v}")
-        if info.field_name == "longitude" and not (-180 <= v <= 180):
-            raise ValueError(f"Invalid longitude: {v}")
-        return v
-
-
-class FareDetails(BaseModel):
-    """Fare calculation details."""
-
-    base_fare: float = Field(ge=0)
-    time_rate: float = Field(ge=0)  # per minute
-    distance_rate: float = Field(ge=0)  # per km
-    surge_multiplier: float = Field(default=1.0, ge=1.0)
-    tolls: float = Field(default=0, ge=0)
-    upfront_quoted: float = Field(ge=0)
-    final_paid: Optional[float] = Field(default=None, ge=0)
-
-    def calculate_base_fare(self, time_minutes: float, distance_km: float) -> float:
-        """Calculate fare using standard formula."""
-        return (
-            self.base_fare
-            + (time_minutes * self.time_rate)
-            + (distance_km * self.distance_rate)
-        ) * self.surge_multiplier + self.tolls
+class AnomalyFlag(Enum):
+    """Flags for different types of anomalies."""
+    HIGH_FARE = "high_fare"
+    LOW_FARE = "low_fare"
+    IMPOSSIBLE_SPEED = "impossible_speed"
+    CIRCULAR_ROUTE = "circular_route"
+    EXCESSIVE_DISTANCE = "excessive_distance"
+    SHORT_DURATION = "short_duration"
+    LONG_DURATION = "long_duration"
+    SUSPICIOUS_PATTERN = "suspicious_pattern"
 
 
-class RouteInfo(BaseModel):
-    """Route information."""
-
-    optimal_distance_km: float = Field(ge=0)
-    actual_distance_km: Optional[float] = Field(default=None, ge=0)
-    optimal_duration_minutes: float = Field(ge=0)
-    actual_duration_minutes: Optional[float] = Field(default=None, ge=0)
-    waypoints: List[GPSPoint] = Field(default_factory=list)
-    mid_trip_changes: List[str] = Field(default_factory=list)
-
-
-class RideBooking(BaseModel):
-    """Complete ride booking data."""
-
-    booking_id: str
-    passenger_id: str
-    driver_id: Optional[str] = None
-    state: RideState = RideState.REQUESTED
-    created_at: datetime
-    accepted_at: Optional[datetime] = None
-    arrived_at: Optional[datetime] = None
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    fare: FareDetails
-    route: RouteInfo
-    telemetry: List[GPSPoint] = Field(default_factory=list)
-    state_transitions: List[tuple[RideState, datetime]] = Field(default_factory=list)
-
-    def add_state_transition(self, new_state: RideState, timestamp: datetime) -> None:
-        """Record a state transition."""
-        self.state_transitions.append((new_state, timestamp))
-        self.state = new_state
-
-        # Update relevant timestamps
-        if new_state == RideState.ACCEPTED:
-            self.accepted_at = timestamp
-        elif new_state == RideState.ARRIVED:
-            self.arrived_at = timestamp
-        elif new_state == RideState.IN_PROGRESS:
-            self.started_at = timestamp
-        elif new_state == RideState.COMPLETED:
-            self.completed_at = timestamp
+@dataclass
+class Location:
+    """Geographic location with coordinates."""
+    latitude: float
+    longitude: float
+    address: Optional[str] = None
+    
+    def __post_init__(self):
+        """Validate coordinates."""
+        if not -90 <= self.latitude <= 90:
+            raise ValueError(f"Invalid latitude: {self.latitude}")
+        if not -180 <= self.longitude <= 180:
+            raise ValueError(f"Invalid longitude: {self.longitude}")
 
 
-class AnomalyFlag(BaseModel):
-    """Detected anomaly details."""
+@dataclass
+class RideRequest:
+    """Ride request data model."""
+    ride_id: str
+    user_id: str
+    driver_id: Optional[str]
+    pickup_location: Location
+    dropoff_location: Location
+    requested_at: datetime
+    fare_amount: float
+    distance_km: float
+    duration_minutes: float
+    payment_method: str
+    vehicle_type: str = "standard"
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    
+    def __post_init__(self):
+        """Validate ride request data."""
+        if self.fare_amount < 0:
+            raise ValueError(f"Invalid fare amount: {self.fare_amount}")
+        if self.distance_km < 0:
+            raise ValueError(f"Invalid distance: {self.distance_km}")
+        if self.duration_minutes < 0:
+            raise ValueError(f"Invalid duration: {self.duration_minutes}")
 
-    type: AnomalyType
-    severity: str = Field(default="WARNING")  # INFO, WARNING, CRITICAL
-    description: str
-    detected_at: datetime
-    evidence: dict = Field(default_factory=dict)
-    confidence: float = Field(ge=0, le=1, default=1.0)
 
-
-class ValidationResult(BaseModel):
-    """Ride validation result."""
-
-    booking_id: str
-    status: str = "SUCCESS"  # SUCCESS, COMPLETED_WITH_FLAGS, FAILED
-    flags: List[AnomalyFlag] = Field(default_factory=list)
-    validation_timestamp: datetime
-    metrics: dict = Field(default_factory=dict)
-    passed_checks: List[str] = Field(default_factory=list)
-    failed_checks: List[str] = Field(default_factory=list)
-
-    @property
+@dataclass
+class ValidationResult:
+    """Result of ride validation."""
+    ride_id: str
+    status: ValidationStatus
+    anomalies: List[AnomalyType] = field(default_factory=list)
+    flags: List[AnomalyFlag] = field(default_factory=list)
+    confidence_score: float = 1.0
+    validated_at: datetime = field(default_factory=datetime.now)
+    details: Dict[str, Any] = field(default_factory=dict)
+    
+    def __post_init__(self):
+        """Validate result data."""
+        if not 0 <= self.confidence_score <= 1:
+            raise ValueError(f"Invalid confidence score: {self.confidence_score}")
+    
+    def is_valid(self) -> bool:
+        """Check if validation passed."""
+        return self.status == ValidationStatus.VALID
+    
     def has_anomalies(self) -> bool:
         """Check if any anomalies were detected."""
-        return len(self.flags) > 0
+        return len(self.anomalies) > 0 or len(self.flags) > 0
 
-    @property
-    def critical_anomalies(self) -> List[AnomalyFlag]:
-        """Get critical severity anomalies."""
-        return [f for f in self.flags if f.severity == "CRITICAL"]
+
+@dataclass
+class AnomalyDetection:
+    """Anomaly detection result."""
+    anomaly_type: AnomalyType
+    severity: float  # 0.0 to 1.0
+    description: str
+    detected_value: Any
+    expected_range: Optional[tuple] = None
+    confidence: float = 0.5
+    
+    def __post_init__(self):
+        """Validate anomaly data."""
+        if not 0 <= self.severity <= 1:
+            raise ValueError(f"Invalid severity: {self.severity}")
+        if not 0 <= self.confidence <= 1:
+            raise ValueError(f"Invalid confidence: {self.confidence}")
+    
+    def is_critical(self) -> bool:
+        """Check if anomaly is critical."""
+        return self.severity >= 0.8
+
+
+@dataclass
+class ValidationMetrics:
+    """Metrics for validation performance."""
+    total_rides: int = 0
+    valid_rides: int = 0
+    invalid_rides: int = 0
+    flagged_rides: int = 0
+    anomaly_counts: Dict[str, int] = field(default_factory=dict)
+    processing_time_ms: float = 0.0
+    
+    def get_validation_rate(self) -> float:
+        """Calculate validation success rate."""
+        if self.total_rides == 0:
+            return 0.0
+        return self.valid_rides / self.total_rides
+    
+    def get_anomaly_rate(self) -> float:
+        """Calculate anomaly detection rate."""
+        if self.total_rides == 0:
+            return 0.0
+        total_anomalies = sum(self.anomaly_counts.values())
+        return total_anomalies / self.total_rides
+
+
+@dataclass
+class RidePattern:
+    """Pattern analysis for ride behavior."""
+    user_id: str
+    pattern_type: str
+    frequency: int
+    time_window_hours: int
+    locations: List[Location] = field(default_factory=list)
+    average_fare: float = 0.0
+    total_distance: float = 0.0
+    
+    def is_suspicious(self) -> bool:
+        """Check if pattern is suspicious."""
+        # High frequency in short time window
+        if self.time_window_hours > 0:
+            rides_per_hour = self.frequency / self.time_window_hours
+            if rides_per_hour > 10:  # More than 10 rides per hour
+                return True
+        return False
+
+
+@dataclass 
+class ValidationConfig:
+    """Configuration for validation rules."""
+    max_fare_per_km: float = 10.0
+    min_fare_per_km: float = 0.5
+    max_speed_kmh: float = 200.0
+    min_speed_kmh: float = 5.0
+    max_distance_km: float = 500.0
+    min_distance_km: float = 0.1
+    max_duration_hours: float = 12.0
+    min_duration_minutes: float = 1.0
+    anomaly_threshold: float = 0.7
+    enable_ml_detection: bool = True
+    enable_pattern_analysis: bool = True
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert config to dictionary."""
+        return {
+            "max_fare_per_km": self.max_fare_per_km,
+            "min_fare_per_km": self.min_fare_per_km,
+            "max_speed_kmh": self.max_speed_kmh,
+            "min_speed_kmh": self.min_speed_kmh,
+            "max_distance_km": self.max_distance_km,
+            "min_distance_km": self.min_distance_km,
+            "max_duration_hours": self.max_duration_hours,
+            "min_duration_minutes": self.min_duration_minutes,
+            "anomaly_threshold": self.anomaly_threshold,
+            "enable_ml_detection": self.enable_ml_detection,
+            "enable_pattern_analysis": self.enable_pattern_analysis
+        }
