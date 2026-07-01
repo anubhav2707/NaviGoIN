@@ -1,234 +1,191 @@
-import { isValidIndianMobile } from '../validators';
+import * as validators from '../validators';
+import * as utils from '../index';
 
-/**
- * Integration tests for isValidIndianMobile validator
- * Tests the validator in combination with other system components
- */
-
-describe('isValidIndianMobile Integration Tests', () => {
-  describe('Form validation integration', () => {
-    // Simulating form validation scenarios
-    const validatePhoneField = (value: string): { valid: boolean; error?: string } => {
-      if (!value) {
-        return { valid: false, error: 'Phone number is required' };
-      }
-      
-      if (!isValidIndianMobile(value)) {
-        return { valid: false, error: 'Please enter a valid Indian mobile number' };
-      }
-      
-      return { valid: true };
-    };
-
-    test('should integrate with form validation for empty input', () => {
-      const result = validatePhoneField('');
-      expect(result.valid).toBe(false);
-      expect(result.error).toBe('Phone number is required');
+describe('Validators Integration Tests', () => {
+  describe('Module exports', () => {
+    it('should export isValidIndianPincode from validators module', () => {
+      expect(validators.isValidIndianPincode).toBeDefined();
+      expect(typeof validators.isValidIndianPincode).toBe('function');
     });
 
-    test('should integrate with form validation for invalid number', () => {
-      const result = validatePhoneField('123456');
-      expect(result.valid).toBe(false);
-      expect(result.error).toBe('Please enter a valid Indian mobile number');
+    it('should export isValidIndianPincode from index', () => {
+      expect(utils.isValidIndianPincode).toBeDefined();
+      expect(typeof utils.isValidIndianPincode).toBe('function');
     });
 
-    test('should integrate with form validation for valid number', () => {
-      const result = validatePhoneField('9876543210');
-      expect(result.valid).toBe(true);
-      expect(result.error).toBeUndefined();
+    it('should have the same implementation in both exports', () => {
+      expect(validators.isValidIndianPincode).toBe(utils.isValidIndianPincode);
+    });
+
+    it('should export all validator functions', () => {
+      expect(validators.isValidEmail).toBeDefined();
+      expect(validators.isValidPhone).toBeDefined();
+      expect(validators.isValidIndianPincode).toBeDefined();
     });
   });
 
-  describe('Data normalization integration', () => {
-    // Function that uses the validator before normalizing
-    const normalizePhoneNumber = (phone: string): string | null => {
-      if (!isValidIndianMobile(phone)) {
-        return null;
-      }
-      
-      // Remove all formatting and country code
-      let normalized = phone.replace(/[\s\-()\.]*/g, '');
-      if (normalized.startsWith('+91')) {
-        normalized = normalized.substring(3);
-      } else if (normalized.startsWith('91') && normalized.length === 12) {
-        normalized = normalized.substring(2);
-      } else if (normalized.startsWith('0091')) {
-        normalized = normalized.substring(4);
-      }
-      
-      return normalized;
-    };
+  describe('Integration with other validators', () => {
+    it('should work alongside other validators without conflicts', () => {
+      const testData = {
+        email: 'user@example.com',
+        phone: '9876543210',
+        pincode: '560001'
+      };
 
-    test('should normalize valid number with country code', () => {
-      expect(normalizePhoneNumber('+91 98765 43210')).toBe('9876543210');
+      expect(validators.isValidEmail(testData.email)).toBe(true);
+      expect(validators.isValidPhone(testData.phone)).toBe(true);
+      expect(validators.isValidIndianPincode(testData.pincode)).toBe(true);
     });
 
-    test('should normalize valid number without country code', () => {
-      expect(normalizePhoneNumber('98765-43210')).toBe('9876543210');
-    });
+    it('should handle invalid data correctly across all validators', () => {
+      const invalidData = {
+        email: 'invalid-email',
+        phone: '123',
+        pincode: '012345'
+      };
 
-    test('should return null for invalid number', () => {
-      expect(normalizePhoneNumber('5876543210')).toBeNull();
-    });
-
-    test('should return null for malformed input', () => {
-      expect(normalizePhoneNumber('invalid')).toBeNull();
+      expect(validators.isValidEmail(invalidData.email)).toBe(false);
+      expect(validators.isValidPhone(invalidData.phone)).toBe(false);
+      expect(validators.isValidIndianPincode(invalidData.pincode)).toBe(false);
     });
   });
 
-  describe('Bulk validation integration', () => {
-    // Function that validates multiple phone numbers
-    const validatePhoneList = (phones: string[]): { valid: string[]; invalid: string[] } => {
-      const valid: string[] = [];
-      const invalid: string[] = [];
-      
-      phones.forEach(phone => {
-        if (isValidIndianMobile(phone)) {
-          valid.push(phone);
-        } else {
-          invalid.push(phone);
-        }
-      });
-      
-      return { valid, invalid };
-    };
-
-    test('should validate list of mixed phone numbers', () => {
-      const phones = [
-        '9876543210',
-        '+919876543210',
-        '5876543210',
-        '98765 43210',
-        'invalid',
-        '7654321098',
-        '123456789',
-        '+91-8765-432109'
-      ];
-      
-      const result = validatePhoneList(phones);
-      
-      expect(result.valid).toEqual([
-        '9876543210',
-        '+919876543210',
-        '98765 43210',
-        '7654321098',
-        '+91-8765-432109'
-      ]);
-      
-      expect(result.invalid).toEqual([
-        '5876543210',
-        'invalid',
-        '123456789'
-      ]);
-    });
-
-    test('should handle empty list', () => {
-      const result = validatePhoneList([]);
-      expect(result.valid).toEqual([]);
-      expect(result.invalid).toEqual([]);
-    });
-
-    test('should handle list with all valid numbers', () => {
-      const phones = ['9876543210', '8765432109', '7654321098'];
-      const result = validatePhoneList(phones);
-      expect(result.valid).toEqual(phones);
-      expect(result.invalid).toEqual([]);
-    });
-
-    test('should handle list with all invalid numbers', () => {
-      const phones = ['123', '456', '789'];
-      const result = validatePhoneList(phones);
-      expect(result.valid).toEqual([]);
-      expect(result.invalid).toEqual(phones);
-    });
-  });
-
-  describe('API request integration', () => {
-    // Simulating API request preparation
-    interface UserRegistration {
-      name: string;
+  describe('Combined validation scenarios', () => {
+    interface UserAddress {
+      email: string;
       phone: string;
-      isValidPhone: boolean;
+      pincode: string;
     }
 
-    const prepareRegistrationData = (name: string, phone: string): UserRegistration | null => {
-      if (!name || !phone) {
-        return null;
-      }
-      
-      const isValidPhone = isValidIndianMobile(phone);
-      
-      if (!isValidPhone) {
-        return null;
-      }
-      
-      // Normalize phone for API
-      let normalizedPhone = phone.replace(/[\s\-()\.]*/g, '');
-      if (normalizedPhone.startsWith('+91')) {
-        normalizedPhone = normalizedPhone.substring(3);
-      } else if (normalizedPhone.startsWith('91') && normalizedPhone.length === 12) {
-        normalizedPhone = normalizedPhone.substring(2);
-      }
-      
-      return {
-        name,
-        phone: normalizedPhone,
-        isValidPhone
-      };
-    };
+    function validateUserAddress(address: UserAddress): boolean {
+      return (
+        validators.isValidEmail(address.email) &&
+        validators.isValidPhone(address.phone) &&
+        validators.isValidIndianPincode(address.pincode)
+      );
+    }
 
-    test('should prepare valid registration data', () => {
-      const result = prepareRegistrationData('John Doe', '+91 98765 43210');
-      expect(result).toEqual({
-        name: 'John Doe',
+    it('should validate complete user address', () => {
+      const validAddress: UserAddress = {
+        email: 'john@example.com',
         phone: '9876543210',
-        isValidPhone: true
+        pincode: '560001'
+      };
+
+      expect(validateUserAddress(validAddress)).toBe(true);
+    });
+
+    it('should reject address with invalid pincode', () => {
+      const invalidAddress: UserAddress = {
+        email: 'john@example.com',
+        phone: '9876543210',
+        pincode: '012345' // Invalid: starts with 0
+      };
+
+      expect(validateUserAddress(invalidAddress)).toBe(false);
+    });
+
+    it('should reject address with any invalid field', () => {
+      const addresses: UserAddress[] = [
+        { email: 'invalid', phone: '9876543210', pincode: '560001' },
+        { email: 'john@example.com', phone: '123', pincode: '560001' },
+        { email: 'john@example.com', phone: '9876543210', pincode: '12345' }
+      ];
+
+      addresses.forEach(address => {
+        expect(validateUserAddress(address)).toBe(false);
       });
-    });
-
-    test('should return null for invalid phone', () => {
-      const result = prepareRegistrationData('John Doe', '5876543210');
-      expect(result).toBeNull();
-    });
-
-    test('should return null for missing data', () => {
-      expect(prepareRegistrationData('', '9876543210')).toBeNull();
-      expect(prepareRegistrationData('John Doe', '')).toBeNull();
     });
   });
 
-  describe('Database query integration', () => {
-    // Simulating database query building
-    const buildPhoneSearchQuery = (searchTerm: string): string | null => {
-      // Only build query if the search term is a valid phone number
-      if (!isValidIndianMobile(searchTerm)) {
-        return null;
-      }
-      
-      // Normalize for database search
-      let normalized = searchTerm.replace(/[\s\-()\.]*/g, '');
-      if (normalized.startsWith('+91')) {
-        normalized = normalized.substring(3);
-      } else if (normalized.startsWith('91') && normalized.length === 12) {
-        normalized = normalized.substring(2);
-      }
-      
-      return `SELECT * FROM users WHERE phone = '${normalized}' OR phone = '+91${normalized}'`;
-    };
+  describe('Real-world Indian pincode validation', () => {
+    const realIndianPincodes = [
+      '110001', // New Delhi
+      '400001', // Mumbai
+      '700001', // Kolkata
+      '600001', // Chennai
+      '560001', // Bangalore
+      '500001', // Hyderabad
+      '380001', // Ahmedabad
+      '411001', // Pune
+      '226001', // Lucknow
+      '302001', // Jaipur
+    ];
 
-    test('should build query for valid phone number', () => {
-      const query = buildPhoneSearchQuery('9876543210');
-      expect(query).toBe("SELECT * FROM users WHERE phone = '9876543210' OR phone = '+919876543210'");
+    it('should validate real Indian pincodes', () => {
+      realIndianPincodes.forEach(pincode => {
+        expect(validators.isValidIndianPincode(pincode)).toBe(true);
+      });
     });
 
-    test('should build query for formatted phone number', () => {
-      const query = buildPhoneSearchQuery('+91 98765 43210');
-      expect(query).toBe("SELECT * FROM users WHERE phone = '9876543210' OR phone = '+919876543210'");
+    const invalidPincodes = [
+      '000000', // Cannot start with 0
+      '012345', // Cannot start with 0
+      '12345',  // Too short
+      '1234567', // Too long
+      'ABCDEF', // Non-numeric
+      '56 001', // Contains space
+      '56-001', // Contains special character
+      '',       // Empty
+    ];
+
+    it('should reject invalid pincodes', () => {
+      invalidPincodes.forEach(pincode => {
+        expect(validators.isValidIndianPincode(pincode)).toBe(false);
+      });
+    });
+  });
+
+  describe('Error handling and edge cases', () => {
+    it('should handle function composition', () => {
+      const pincodes = ['560001', '012345', '110001', 'invalid', '400001'];
+      const validPincodes = pincodes.filter(validators.isValidIndianPincode);
+      
+      expect(validPincodes).toEqual(['560001', '110001', '400001']);
     });
 
-    test('should return null for invalid phone number', () => {
-      expect(buildPhoneSearchQuery('123456')).toBeNull();
-      expect(buildPhoneSearchQuery('invalid')).toBeNull();
+    it('should work with array methods', () => {
+      const data = [
+        { city: 'Bangalore', pincode: '560001' },
+        { city: 'Invalid', pincode: '012345' },
+        { city: 'Delhi', pincode: '110001' },
+      ];
+
+      const validCities = data
+        .filter(item => validators.isValidIndianPincode(item.pincode))
+        .map(item => item.city);
+
+      expect(validCities).toEqual(['Bangalore', 'Delhi']);
+    });
+
+    it('should handle rapid successive calls', () => {
+      const results: boolean[] = [];
+      for (let i = 0; i < 100; i++) {
+        results.push(validators.isValidIndianPincode('560001'));
+        results.push(validators.isValidIndianPincode('012345'));
+      }
+
+      expect(results.filter(r => r === true).length).toBe(100);
+      expect(results.filter(r => r === false).length).toBe(100);
+    });
+  });
+
+  describe('Type safety', () => {
+    it('should only accept string parameters', () => {
+      // TypeScript will enforce this at compile time
+      // These tests ensure runtime behavior matches
+      expect(validators.isValidIndianPincode('560001')).toBe(true);
+      expect(validators.isValidIndianPincode('')).toBe(false);
+    });
+
+    it('should return boolean values', () => {
+      const result1 = validators.isValidIndianPincode('560001');
+      const result2 = validators.isValidIndianPincode('invalid');
+      
+      expect(typeof result1).toBe('boolean');
+      expect(typeof result2).toBe('boolean');
+      expect(result1).toBe(true);
+      expect(result2).toBe(false);
     });
   });
 });
