@@ -1,25 +1,21 @@
-"""Ride booking validation and outlier detection module."""
+"""Ride validation package for detecting anomalous routes."""
 
-from .detector import OutlierDetector
 from .models import (
-    AnomalyFlag,
-    AnomalyType,
-    FareDetails,
-    GPSPoint,
-    RideBooking,
-    RideState,
+    RideRequest,
     ValidationResult,
+    ValidationStatus,
+    AnomalyType
 )
-from .validator import RideBookingValidator
+from .validator import RouteValidator
+from .detector import OutlierDetector
 
 __all__ = [
-    "RideBookingValidator",
-    "OutlierDetector",
-    "RideBooking",
-    "RideState",
-    "GPSPoint",
-    "FareDetails",
-    "ValidationResult",
-    "AnomalyType",
-    "AnomalyFlag",
+    'RideRequest',
+    'ValidationResult', 
+    'ValidationStatus',
+    'AnomalyType',
+    'RouteValidator',
+    'OutlierDetector'
 ]
+
+__version__ = '1.0.0'
