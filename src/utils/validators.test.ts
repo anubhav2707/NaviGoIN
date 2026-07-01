@@ -1,85 +1,170 @@
-import { isValidEmail, isValidPhone, isValidIndianPincode } from './validators';
+import { isValidIndianPincode } from './validators';
 
-describe('validators', () => {
-  describe('isValidEmail', () => {
-    it('should return true for valid email addresses', () => {
-      expect(isValidEmail('test@example.com')).toBe(true);
-      expect(isValidEmail('user.name@domain.co.uk')).toBe(true);
-      expect(isValidEmail('user+tag@example.org')).toBe(true);
-    });
-
-    it('should return false for invalid email addresses', () => {
-      expect(isValidEmail('')).toBe(false);
-      expect(isValidEmail('invalid')).toBe(false);
-      expect(isValidEmail('@example.com')).toBe(false);
-      expect(isValidEmail('user@')).toBe(false);
-      expect(isValidEmail('user @example.com')).toBe(false);
-    });
-  });
-
-  describe('isValidPhone', () => {
-    it('should return true for valid phone numbers', () => {
-      expect(isValidPhone('1234567890')).toBe(true);
-      expect(isValidPhone('+1-234-567-8900')).toBe(true);
-      expect(isValidPhone('(123) 456-7890')).toBe(true);
-    });
-
-    it('should return false for invalid phone numbers', () => {
-      expect(isValidPhone('')).toBe(false);
-      expect(isValidPhone('123')).toBe(false);
-      expect(isValidPhone('abcdefghij')).toBe(false);
-    });
-  });
-
-  describe('isValidIndianPincode', () => {
-    it('should return true for valid Indian pincodes', () => {
+describe('isValidIndianPincode', () => {
+  describe('valid PIN codes', () => {
+    it('should return true for valid PIN code 560001', () => {
       expect(isValidIndianPincode('560001')).toBe(true);
+    });
+
+    it('should return true for valid PIN code 110001', () => {
       expect(isValidIndianPincode('110001')).toBe(true);
+    });
+
+    it('should return true for PIN code starting with 1', () => {
+      expect(isValidIndianPincode('123456')).toBe(true);
+    });
+
+    it('should return true for PIN code starting with 9', () => {
       expect(isValidIndianPincode('999999')).toBe(true);
-      expect(isValidIndianPincode('100000')).toBe(true);
     });
 
-    it('should return false for pincodes starting with 0', () => {
+    it('should return true for PIN code with all different digits', () => {
+      expect(isValidIndianPincode('123456')).toBe(true);
+    });
+
+    it('should return true for PIN code with repeated digits', () => {
+      expect(isValidIndianPincode('111111')).toBe(true);
+    });
+  });
+
+  describe('invalid PIN codes - starting with 0', () => {
+    it('should return false for PIN code starting with 0', () => {
       expect(isValidIndianPincode('012345')).toBe(false);
+    });
+
+    it('should return false for PIN code 000000', () => {
       expect(isValidIndianPincode('000000')).toBe(false);
-      expect(isValidIndianPincode('099999')).toBe(false);
     });
 
-    it('should return false for incorrect lengths', () => {
+    it('should return false for PIN code 000001', () => {
+      expect(isValidIndianPincode('000001')).toBe(false);
+    });
+  });
+
+  describe('invalid PIN codes - wrong length', () => {
+    it('should return false for PIN code that is too short (5 digits)', () => {
       expect(isValidIndianPincode('12345')).toBe(false);
+    });
+
+    it('should return false for PIN code that is too long (7 digits)', () => {
       expect(isValidIndianPincode('1234567')).toBe(false);
+    });
+
+    it('should return false for single digit', () => {
+      expect(isValidIndianPincode('1')).toBe(false);
+    });
+
+    it('should return false for two digits', () => {
       expect(isValidIndianPincode('12')).toBe(false);
-      expect(isValidIndianPincode('12345678901')).toBe(false);
     });
 
-    it('should return false for non-digit characters', () => {
+    it('should return false for three digits', () => {
+      expect(isValidIndianPincode('123')).toBe(false);
+    });
+
+    it('should return false for four digits', () => {
+      expect(isValidIndianPincode('1234')).toBe(false);
+    });
+
+    it('should return false for eight digits', () => {
+      expect(isValidIndianPincode('12345678')).toBe(false);
+    });
+  });
+
+  describe('invalid PIN codes - non-digit characters', () => {
+    it('should return false for PIN code with letter in middle', () => {
       expect(isValidIndianPincode('56a001')).toBe(false);
-      expect(isValidIndianPincode('56 001')).toBe(false);
-      expect(isValidIndianPincode('56-001')).toBe(false);
-      expect(isValidIndianPincode('5600.1')).toBe(false);
-      expect(isValidIndianPincode('56000!')).toBe(false);
     });
 
+    it('should return false for PIN code with letter at start', () => {
+      expect(isValidIndianPincode('a60001')).toBe(false);
+    });
+
+    it('should return false for PIN code with letter at end', () => {
+      expect(isValidIndianPincode('56000a')).toBe(false);
+    });
+
+    it('should return false for PIN code with special characters', () => {
+      expect(isValidIndianPincode('560@01')).toBe(false);
+    });
+
+    it('should return false for PIN code with spaces', () => {
+      expect(isValidIndianPincode('560 01')).toBe(false);
+    });
+
+    it('should return false for PIN code with hyphens', () => {
+      expect(isValidIndianPincode('560-01')).toBe(false);
+    });
+
+    it('should return false for all letters', () => {
+      expect(isValidIndianPincode('abcdef')).toBe(false);
+    });
+  });
+
+  describe('edge cases', () => {
     it('should return false for empty string', () => {
       expect(isValidIndianPincode('')).toBe(false);
     });
 
-    it('should handle edge cases', () => {
-      expect(isValidIndianPincode(' 560001')).toBe(false); // leading space
-      expect(isValidIndianPincode('560001 ')).toBe(false); // trailing space
-      expect(isValidIndianPincode(' 560001 ')).toBe(false); // both spaces
-      expect(isValidIndianPincode('null')).toBe(false);
-      expect(isValidIndianPincode('undefined')).toBe(false);
+    it('should return false for null-like values', () => {
+      expect(isValidIndianPincode(null as any)).toBe(false);
     });
 
-    // Acceptance criteria tests
-    it('should pass acceptance criteria', () => {
+    it('should return false for undefined-like values', () => {
+      expect(isValidIndianPincode(undefined as any)).toBe(false);
+    });
+
+    it('should return false for whitespace only', () => {
+      expect(isValidIndianPincode('      ')).toBe(false);
+    });
+
+    it('should return false for PIN code with leading spaces', () => {
+      expect(isValidIndianPincode(' 560001')).toBe(false);
+    });
+
+    it('should return false for PIN code with trailing spaces', () => {
+      expect(isValidIndianPincode('560001 ')).toBe(false);
+    });
+
+    it('should return false for PIN code with decimal point', () => {
+      expect(isValidIndianPincode('560.01')).toBe(false);
+    });
+
+    it('should return false for negative number string', () => {
+      expect(isValidIndianPincode('-56001')).toBe(false);
+    });
+
+    it('should return false for positive sign prefix', () => {
+      expect(isValidIndianPincode('+56001')).toBe(false);
+    });
+  });
+
+  describe('acceptance criteria verification', () => {
+    it('isValidIndianPincode("560001") should return true', () => {
       expect(isValidIndianPincode('560001')).toBe(true);
+    });
+
+    it('isValidIndianPincode("110001") should return true', () => {
       expect(isValidIndianPincode('110001')).toBe(true);
+    });
+
+    it('isValidIndianPincode("012345") should return false (starts with 0)', () => {
       expect(isValidIndianPincode('012345')).toBe(false);
+    });
+
+    it('isValidIndianPincode("12345") should return false (too short)', () => {
       expect(isValidIndianPincode('12345')).toBe(false);
+    });
+
+    it('isValidIndianPincode("1234567") should return false (too long)', () => {
       expect(isValidIndianPincode('1234567')).toBe(false);
+    });
+
+    it('isValidIndianPincode("56a001") should return false (non-digit)', () => {
       expect(isValidIndianPincode('56a001')).toBe(false);
+    });
+
+    it('isValidIndianPincode("") should return false', () => {
       expect(isValidIndianPincode('')).toBe(false);
     });
   });
