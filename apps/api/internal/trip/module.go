@@ -6,9 +6,7 @@ package trip
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -60,10 +58,6 @@ func canTransition(from, to Status) bool {
 	return false
 }
 
-// errInvalidTransition is returned when a status change violates the lifecycle
-// state machine (e.g. requested -> completed).
-var errInvalidTransition = errors.New("invalid trip status transition")
-
 type service struct {
 	db *sql.DB
 }
@@ -102,46 +96,53 @@ func (s *service) create(riderID string, pickup, drop Point) (Trip, error) {
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
-	if _, err := s.db.Exec(
-		`INSERT INTO trips (`+selectTripColumns+`)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		t.ID, t.RiderID, sql.NullString{String: t.DriverID, Valid: t.DriverID != ""},
-		t.Pickup.Lat, t.Pickup.Lng, t.Drop.Lat, t.Drop.Lng,
-		string(t.Status), t.CreatedAt.Format(time.RFC3339), t.UpdatedAt.Format(time.RFC3339),
-	); err != nil {
-		return Trip{}, err
-	}
-	return t, nil
+	_, err := s.db.Exec(
+		`INSERT INTO trips (`+selectTripColumns+`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		t.ID, t.RiderID, nil, t.Pickup.Lat, t.Pickup.Lng, t.Drop.Lat, t.Drop.Lng,
+		string(t.Status), now.Format(time.RFC3339), now.Format(time.RFC3339),
+	)
+	return t, err
 }
 
-func (s *service) get(id string) (Trip, error) {
+func (s *service) get(id string) (Trip, bool) {
 	row := s.db.QueryRow(`SELECT `+selectTripColumns+` FROM trips WHERE id = ?`, id)
-	return scanTrip(row)
+	t, err := scanTrip(row)
+	return t, err == nil
 }
 
-// transition moves a trip to a new status, refusing moves the state machine
-// disallows so callers can't corrupt the lifecycle.
-func (s *service) transition(id string, to Status) (Trip, error) {
-	t, err := s.get(id)
-	if err != nil {
-		return Trip{}, err
+var (
+	errNotFound      = "trip not found"
+	errBadTransition = "invalid status transition"
+)
+
+func (s *service) transition(id string, to Status, driverID string) (Trip, string) {
+	current, ok := s.get(id)
+	if !ok {
+		return Trip{}, errNotFound
 	}
-	if !canTransition(t.Status, to) {
-		return Trip{}, errInvalidTransition
+	if !canTransition(current.Status, to) {
+		return Trip{}, errBadTransition
 	}
-	t.Status = to
-	t.UpdatedAt = time.Now().UTC()
+
+	current.Status = to
+	current.UpdatedAt = time.Now().UTC()
+	if to == StatusAccepted && driverID != "" {
+		current.DriverID = driverID
+	}
+
+	var driverVal any
+	if current.DriverID != "" {
+		driverVal = current.DriverID
+	}
 	if _, err := s.db.Exec(
-		`UPDATE trips SET status = ?, updated_at = ? WHERE id = ?`,
-		string(t.Status), t.UpdatedAt.Format(time.RFC3339), t.ID,
+		`UPDATE trips SET status = ?, driver_id = ?, updated_at = ? WHERE id = ?`,
+		string(current.Status), driverVal, current.UpdatedAt.Format(time.RFC3339), id,
 	); err != nil {
-		return Trip{}, err
+		return Trip{}, errNotFound
 	}
-	return t, nil
+	return current, ""
 }
 
-// Module wires the trip service into the HTTP router. It implements
-// httpserver.Module so the server mounts it under /v1/trips.
 type Module struct {
 	svc *service
 }
@@ -154,11 +155,8 @@ func (m *Module) Name() string { return "trips" }
 
 func (m *Module) MountRoutes(r chi.Router) {
 	r.Post("/", m.handleCreate)
-	// Static "/export" is registered alongside the "/{id}" wildcard; chi matches
-	// static segments before params, so the export route is not shadowed.
-	r.Get("/export", exportHistoryHandler(m.svc))
 	r.Get("/{id}", m.handleGet)
-	r.Post("/{id}/status", m.handleTransition)
+	r.Patch("/{id}/status", m.handleTransition)
 }
 
 type createRequest struct {
@@ -169,54 +167,46 @@ type createRequest struct {
 
 func (m *Module) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req createRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httpserver.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
-		return
-	}
-	if strings.TrimSpace(req.RiderID) == "" {
-		httpserver.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "riderId is required"})
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.RiderID == "" {
+		httpserver.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "riderId, pickup and drop are required"})
 		return
 	}
 	t, err := m.svc.create(req.RiderID, req.Pickup, req.Drop)
 	if err != nil {
-		httpserver.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to create trip"})
+		httpserver.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "could not create trip"})
 		return
 	}
 	httpserver.WriteJSON(w, http.StatusCreated, t)
 }
 
 func (m *Module) handleGet(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	t, err := m.svc.get(id)
-	if err != nil {
-		httpserver.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "trip not found"})
+	t, ok := m.svc.get(chi.URLParam(r, "id"))
+	if !ok {
+		httpserver.WriteJSON(w, http.StatusNotFound, map[string]string{"error": errNotFound})
 		return
 	}
 	httpserver.WriteJSON(w, http.StatusOK, t)
 }
 
 type transitionRequest struct {
-	Status Status `json:"status"`
+	Status   Status `json:"status"`
+	DriverID string `json:"driverId,omitempty"`
 }
 
 func (m *Module) handleTransition(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
 	var req transitionRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		httpserver.WriteJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
 		return
 	}
-	t, err := m.svc.transition(id, req.Status)
-	if err != nil {
-		switch {
-		case errors.Is(err, errInvalidTransition):
-			httpserver.WriteJSON(w, http.StatusConflict, map[string]string{"error": err.Error()})
-		case errors.Is(err, sql.ErrNoRows):
-			httpserver.WriteJSON(w, http.StatusNotFound, map[string]string{"error": "trip not found"})
-		default:
-			httpserver.WriteJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to update trip"})
-		}
-		return
+
+	t, errMsg := m.svc.transition(chi.URLParam(r, "id"), req.Status, req.DriverID)
+	switch errMsg {
+	case "":
+		httpserver.WriteJSON(w, http.StatusOK, t)
+	case errNotFound:
+		httpserver.WriteJSON(w, http.StatusNotFound, map[string]string{"error": errMsg})
+	default:
+		httpserver.WriteJSON(w, http.StatusConflict, map[string]string{"error": errMsg})
 	}
-	httpserver.WriteJSON(w, http.StatusOK, t)
 }
