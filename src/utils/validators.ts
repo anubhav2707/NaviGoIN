@@ -27,3 +27,14 @@ export function validatePhoneNumber(phoneNumber: string): boolean {
   // Must be exactly 10 digits, no other characters allowed
   return /^\d{10}$/.test(phoneNumber);
 }
+
+/**
+ * Validates Indian PIN (Postal Index Number) code format
+ * @param pincode - The PIN code to validate
+ * @returns true if valid, false otherwise
+ */
+export function isValidIndianPincode(pincode: string): boolean {
+  // Must be exactly 6 digits and must not start with 0
+  // (Indian PIN codes always begin with a digit from 1-9)
+  return /^[1-9]\d{5}$/.test(pincode);
+}
