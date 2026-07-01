@@ -1,4 +1,4 @@
-import { validateNumericInput, validatePhoneNumber } from './validators';
+import { validateNumericInput, validatePhoneNumber, isValidIndianPincode } from './validators';
 
 describe('validators', () => {
   describe('validateNumericInput', () => {
@@ -44,6 +44,45 @@ describe('validators', () => {
       expect(validatePhoneNumber('123')).toBe(false);
       expect(validatePhoneNumber('12345678901')).toBe(false);
       expect(validatePhoneNumber('')).toBe(false);
+    });
+  });
+
+  describe('isValidIndianPincode', () => {
+    it('should accept valid 6-digit Indian PIN codes', () => {
+      expect(isValidIndianPincode('560001')).toBe(true);
+      expect(isValidIndianPincode('110001')).toBe(true);
+      expect(isValidIndianPincode('400001')).toBe(true);
+      expect(isValidIndianPincode('999999')).toBe(true);
+      // First digit is 1-9, remaining digits may be zero
+      expect(isValidIndianPincode('100000')).toBe(true);
+    });
+
+    it('should reject PIN codes that start with 0', () => {
+      expect(isValidIndianPincode('012345')).toBe(false);
+      expect(isValidIndianPincode('000000')).toBe(false);
+      expect(isValidIndianPincode('098765')).toBe(false);
+    });
+
+    it('should reject PIN codes with incorrect length', () => {
+      expect(isValidIndianPincode('12345')).toBe(false); // too short
+      expect(isValidIndianPincode('1234567')).toBe(false); // too long
+      expect(isValidIndianPincode('1')).toBe(false);
+      expect(isValidIndianPincode('1234')).toBe(false);
+    });
+
+    it('should reject PIN codes with non-digit characters', () => {
+      expect(isValidIndianPincode('56a001')).toBe(false);
+      expect(isValidIndianPincode('5600 1')).toBe(false);
+      expect(isValidIndianPincode('56000!')).toBe(false);
+      expect(isValidIndianPincode('+56001')).toBe(false);
+      expect(isValidIndianPincode('5600.1')).toBe(false);
+    });
+
+    it('should reject empty or whitespace-padded input', () => {
+      expect(isValidIndianPincode('')).toBe(false);
+      expect(isValidIndianPincode('   ')).toBe(false);
+      expect(isValidIndianPincode(' 560001')).toBe(false);
+      expect(isValidIndianPincode('560001 ')).toBe(false);
     });
   });
 });
