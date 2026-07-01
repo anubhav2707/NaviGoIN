@@ -1,195 +1,166 @@
-import { isValidIndianMobile } from '../validators';
+import { isValidEmail, isValidPhone, isValidIndianPincode } from '../validators';
 
-describe('isValidIndianMobile', () => {
-  describe('Valid Indian mobile numbers', () => {
-    // Basic valid numbers
-    test('should return true for valid 10-digit number starting with 9', () => {
-      expect(isValidIndianMobile('9876543210')).toBe(true);
+describe('Validators Unit Tests', () => {
+  describe('isValidIndianPincode', () => {
+    describe('Valid pincodes', () => {
+      test.each([
+        ['560001', 'Bangalore pincode'],
+        ['110001', 'Delhi pincode'],
+        ['400001', 'Mumbai pincode'],
+        ['700001', 'Kolkata pincode'],
+        ['600001', 'Chennai pincode'],
+        ['500001', 'Hyderabad pincode'],
+        ['100000', 'minimum valid starting with 1'],
+        ['999999', 'maximum valid starting with 9'],
+      ])('should return true for %s (%s)', (pincode, description) => {
+        expect(isValidIndianPincode(pincode)).toBe(true);
+      });
     });
 
-    test('should return true for valid 10-digit number starting with 8', () => {
-      expect(isValidIndianMobile('8765432109')).toBe(true);
+    describe('Invalid pincodes - wrong format', () => {
+      test.each([
+        ['012345', 'starts with 0'],
+        ['000000', 'all zeros'],
+        ['099999', 'starts with 0'],
+        ['12345', 'too short (5 digits)'],
+        ['1234', 'too short (4 digits)'],
+        ['123', 'too short (3 digits)'],
+        ['12', 'too short (2 digits)'],
+        ['1', 'too short (1 digit)'],
+        ['1234567', 'too long (7 digits)'],
+        ['12345678', 'too long (8 digits)'],
+        ['123456789', 'too long (9 digits)'],
+      ])('should return false for %s (%s)', (pincode, description) => {
+        expect(isValidIndianPincode(pincode)).toBe(false);
+      });
     });
 
-    test('should return true for valid 10-digit number starting with 7', () => {
-      expect(isValidIndianMobile('7654321098')).toBe(true);
+    describe('Invalid pincodes - non-numeric characters', () => {
+      test.each([
+        ['56a001', 'contains letter'],
+        ['56A001', 'contains uppercase letter'],
+        ['56 001', 'contains space'],
+        ['56-001', 'contains hyphen'],
+        ['56.001', 'contains dot'],
+        ['56,001', 'contains comma'],
+        ['56!001', 'contains exclamation'],
+        ['56@001', 'contains at symbol'],
+        ['56#001', 'contains hash'],
+        ['56$001', 'contains dollar'],
+        ['56%001', 'contains percent'],
+        ['56^001', 'contains caret'],
+        ['56&001', 'contains ampersand'],
+        ['56*001', 'contains asterisk'],
+        ['56(001', 'contains parenthesis'],
+        ['56)001', 'contains closing parenthesis'],
+        ['56_001', 'contains underscore'],
+        ['56+001', 'contains plus'],
+        ['56=001', 'contains equals'],
+        ['56[001', 'contains bracket'],
+        ['56]001', 'contains closing bracket'],
+        ['56{001', 'contains brace'],
+        ['56}001', 'contains closing brace'],
+        ['56|001', 'contains pipe'],
+        ['56\\001', 'contains backslash'],
+        ['56/001', 'contains forward slash'],
+        ['56:001', 'contains colon'],
+        ['56;001', 'contains semicolon'],
+        ['56"001', 'contains quote'],
+        ["56'001", 'contains single quote'],
+        ['56<001', 'contains less than'],
+        ['56>001', 'contains greater than'],
+        ['56?001', 'contains question mark'],
+        ['56~001', 'contains tilde'],
+        ['56`001', 'contains backtick'],
+      ])('should return false for %s (%s)', (pincode, description) => {
+        expect(isValidIndianPincode(pincode)).toBe(false);
+      });
     });
 
-    test('should return true for valid 10-digit number starting with 6', () => {
-      expect(isValidIndianMobile('6543210987')).toBe(true);
+    describe('Edge cases and special inputs', () => {
+      test.each([
+        ['', 'empty string'],
+        [' ', 'single space'],
+        ['      ', 'multiple spaces'],
+        [' 560001', 'leading space'],
+        ['560001 ', 'trailing space'],
+        [' 560001 ', 'both spaces'],
+        ['\t560001', 'tab character'],
+        ['\n560001', 'newline character'],
+        ['\r560001', 'carriage return'],
+        ['null', 'string "null"'],
+        ['undefined', 'string "undefined"'],
+        ['NaN', 'string "NaN"'],
+        ['true', 'string "true"'],
+        ['false', 'string "false"'],
+        ['[object Object]', 'string representation of object'],
+        ['0x1234AB', 'hexadecimal string'],
+        ['1.23e+5', 'scientific notation'],
+        ['०१२३४५', 'Devanagari numerals'],
+        ['٠١٢٣٤٥', 'Arabic numerals'],
+        ['一二三四五六', 'Chinese numerals'],
+      ])('should return false for %s (%s)', (pincode, description) => {
+        expect(isValidIndianPincode(pincode)).toBe(false);
+      });
     });
 
-    // With country code
-    test('should return true for number with +91 prefix', () => {
-      expect(isValidIndianMobile('+919876543210')).toBe(true);
+    describe('Boundary value testing', () => {
+      it('should validate minimum valid pincode', () => {
+        expect(isValidIndianPincode('100000')).toBe(true);
+      });
+
+      it('should validate maximum valid pincode', () => {
+        expect(isValidIndianPincode('999999')).toBe(true);
+      });
+
+      it('should reject just below minimum', () => {
+        expect(isValidIndianPincode('099999')).toBe(false);
+      });
+
+      it('should reject just above maximum (7 digits)', () => {
+        expect(isValidIndianPincode('1000000')).toBe(false);
+      });
     });
 
-    test('should return true for number with 91 prefix (12 digits total)', () => {
-      expect(isValidIndianMobile('919876543210')).toBe(true);
+    describe('Performance tests', () => {
+      it('should handle large number of validations efficiently', () => {
+        const start = Date.now();
+        for (let i = 0; i < 10000; i++) {
+          isValidIndianPincode('560001');
+          isValidIndianPincode('invalid');
+        }
+        const end = Date.now();
+        expect(end - start).toBeLessThan(100); // Should complete in less than 100ms
+      });
     });
 
-    test('should return true for number with 0091 prefix', () => {
-      expect(isValidIndianMobile('00919876543210')).toBe(true);
-    });
+    describe('Type coercion behavior', () => {
+      it('should handle numeric strings correctly', () => {
+        expect(isValidIndianPincode('560001')).toBe(true);
+        expect(isValidIndianPincode('012345')).toBe(false);
+      });
 
-    // With formatting
-    test('should return true for number with spaces', () => {
-      expect(isValidIndianMobile('98765 43210')).toBe(true);
-    });
-
-    test('should return true for number with multiple spaces', () => {
-      expect(isValidIndianMobile('9 8 7 6 5 4 3 2 1 0')).toBe(true);
-    });
-
-    test('should return true for number with hyphens', () => {
-      expect(isValidIndianMobile('98765-43210')).toBe(true);
-    });
-
-    test('should return true for number with dots', () => {
-      expect(isValidIndianMobile('98765.43210')).toBe(true);
-    });
-
-    test('should return true for number with parentheses', () => {
-      expect(isValidIndianMobile('(98765)43210')).toBe(true);
-    });
-
-    // Complex formatting
-    test('should return true for number with +91 and spaces', () => {
-      expect(isValidIndianMobile('+91 98765 43210')).toBe(true);
-    });
-
-    test('should return true for number with +91 and hyphens', () => {
-      expect(isValidIndianMobile('+91-98765-43210')).toBe(true);
-    });
-
-    test('should return true for number with mixed formatting', () => {
-      expect(isValidIndianMobile('+91 (98765) 43-210')).toBe(true);
-    });
-
-    // Edge cases
-    test('should return true for all same digits starting with 9', () => {
-      expect(isValidIndianMobile('9999999999')).toBe(true);
-    });
-
-    test('should return true for all same digits starting with 6', () => {
-      expect(isValidIndianMobile('6666666666')).toBe(true);
-    });
-
-    test('should return true for boundary case starting with 6', () => {
-      expect(isValidIndianMobile('6000000000')).toBe(true);
-    });
-  });
-
-  describe('Invalid Indian mobile numbers', () => {
-    // Wrong first digit
-    test('should return false for number starting with 5', () => {
-      expect(isValidIndianMobile('5876543210')).toBe(false);
-    });
-
-    test('should return false for number starting with 4', () => {
-      expect(isValidIndianMobile('4876543210')).toBe(false);
-    });
-
-    test('should return false for number starting with 3', () => {
-      expect(isValidIndianMobile('3876543210')).toBe(false);
-    });
-
-    test('should return false for number starting with 2', () => {
-      expect(isValidIndianMobile('2876543210')).toBe(false);
-    });
-
-    test('should return false for number starting with 1', () => {
-      expect(isValidIndianMobile('1876543210')).toBe(false);
-    });
-
-    test('should return false for number starting with 0', () => {
-      expect(isValidIndianMobile('0876543210')).toBe(false);
-    });
-
-    // Wrong length
-    test('should return false for number too short (9 digits)', () => {
-      expect(isValidIndianMobile('987654321')).toBe(false);
-    });
-
-    test('should return false for number too long (11 digits)', () => {
-      expect(isValidIndianMobile('98765432100')).toBe(false);
-    });
-
-    test('should return false for empty string', () => {
-      expect(isValidIndianMobile('')).toBe(false);
-    });
-
-    test('should return false for whitespace only', () => {
-      expect(isValidIndianMobile('   ')).toBe(false);
-    });
-
-    // Invalid characters
-    test('should return false for number with letters', () => {
-      expect(isValidIndianMobile('98765ABC10')).toBe(false);
-    });
-
-    test('should return false for number with special characters', () => {
-      expect(isValidIndianMobile('9876@43210')).toBe(false);
-    });
-
-    test('should return false for number with plus sign in middle', () => {
-      expect(isValidIndianMobile('98765+43210')).toBe(false);
-    });
-
-    // Invalid country code handling
-    test('should return false for +91 with less than 10 digits', () => {
-      expect(isValidIndianMobile('+91987654321')).toBe(false);
-    });
-
-    test('should return false for +91 with more than 10 digits', () => {
-      expect(isValidIndianMobile('+9198765432100')).toBe(false);
-    });
-
-    test('should return false for 91 prefix with wrong total length', () => {
-      expect(isValidIndianMobile('91987654321')).toBe(false);
-    });
-
-    // Type checking
-    test('should return false for null', () => {
-      expect(isValidIndianMobile(null as any)).toBe(false);
-    });
-
-    test('should return false for undefined', () => {
-      expect(isValidIndianMobile(undefined as any)).toBe(false);
-    });
-
-    test('should return false for number type', () => {
-      expect(isValidIndianMobile(9876543210 as any)).toBe(false);
-    });
-
-    test('should return false for object', () => {
-      expect(isValidIndianMobile({} as any)).toBe(false);
-    });
-
-    test('should return false for array', () => {
-      expect(isValidIndianMobile([] as any)).toBe(false);
+      it('should not accept numeric-like but invalid formats', () => {
+        expect(isValidIndianPincode('5.6e+5')).toBe(false);
+        expect(isValidIndianPincode('0b110001')).toBe(false);
+        expect(isValidIndianPincode('0o123456')).toBe(false);
+      });
     });
   });
 
-  describe('Real-world scenarios', () => {
-    test('should handle typical formatted number from user input', () => {
-      expect(isValidIndianMobile('+91-98765-43210')).toBe(true);
+  describe('isValidEmail', () => {
+    it('should validate email addresses correctly', () => {
+      expect(isValidEmail('test@example.com')).toBe(true);
+      expect(isValidEmail('invalid')).toBe(false);
+      expect(isValidEmail('')).toBe(false);
     });
+  });
 
-    test('should handle number copied from contact list', () => {
-      expect(isValidIndianMobile('+91 (98765) 43210')).toBe(true);
-    });
-
-    test('should handle number with country code variation', () => {
-      expect(isValidIndianMobile('0091-9876543210')).toBe(true);
-    });
-
-    test('should reject international numbers', () => {
-      expect(isValidIndianMobile('+1-555-123-4567')).toBe(false);
-    });
-
-    test('should reject landline numbers', () => {
-      expect(isValidIndianMobile('011-23456789')).toBe(false);
+  describe('isValidPhone', () => {
+    it('should validate phone numbers correctly', () => {
+      expect(isValidPhone('1234567890')).toBe(true);
+      expect(isValidPhone('123')).toBe(false);
+      expect(isValidPhone('')).toBe(false);
     });
   });
 });
