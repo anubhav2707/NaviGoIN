@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "RideNow",
+    "name": "NaviGoIn",
     "slug": "rider-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -14,7 +14,11 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ridenow.rider"
+      "bundleIdentifier": "com.ridenow.rider",
+      "infoPlist": {
+        "CFBundleDisplayName": "NaviGoIn",
+        "CFBundleName": "NaviGoIn"
+      }
     },
     "android": {
       "adaptiveIcon": {
