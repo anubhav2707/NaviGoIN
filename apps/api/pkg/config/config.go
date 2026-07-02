@@ -22,8 +22,8 @@ func Load() Config {
 
 	return Config{
 		Port:              getEnv("PORT", "8080"),
-		DatabaseURL:       getEnv("DATABASE_URL", "postgres://ridenow:ridenow@localhost:5432/ridenow?sslmode=disable"),
-		SQLitePath:        getEnv("SQLITE_PATH", "ridenow.db"),
+		DatabaseURL:       getEnv("DATABASE_URL", "postgres://myapp:myapp@localhost:5432/myapp?sslmode=disable"),
+		SQLitePath:        getEnv("SQLITE_PATH", "myapp.db"),
 		RedisAddr:         getEnv("REDIS_ADDR", "localhost:6379"),
 		Env:               getEnv("ENV", "development"),
 		RazorpayKeyID:     getEnv("RAZORPAY_KEY_ID", ""),
