@@ -1,12 +1,13 @@
 {
   "expo": {
-    "name": "NaviGo",
-    "slug": "navigo-rider",
+    "name": "NaviGoIn",
+    "slug": "navigoin",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "scheme": "navigoin",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -14,7 +15,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.navigo.rider"
+      "bundleIdentifier": "com.navigoin.rider",
+      "infoPlist": {
+        "CFBundleDisplayName": "NaviGoIn"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -22,10 +26,12 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "com.navigo.rider"
+      "package": "com.navigoin.rider"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "name": "NaviGoIn",
+      "shortName": "NaviGoIn"
     },
     "extra": {
       "mapplsMapKey": null
