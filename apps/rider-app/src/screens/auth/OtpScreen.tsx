@@ -75,66 +75,73 @@ export default function OtpScreen({ navigation, route }: Props) {
         <View style={styles.content}>
           <Text style={styles.title}>Verify your number</Text>
           <Text style={styles.subtitle}>
-            Enter the 6-digit code sent to <Text style={styles.phone}>{phone}</Text>
+            Enter the code sent to {phone}
           </Text>
 
-          {/* Tapping the boxes focuses a single hidden input that holds the code. */}
-          <TouchableOpacity activeOpacity={1} onPress={() => hiddenInput.current?.focus()}>
-            <View style={styles.boxesRow}>
-              {Array.from({ length: OTP_LENGTH }).map((_, i) => (
-                <View key={i} style={[styles.box, i === code.length && styles.boxActive]}>
-                  <Text style={styles.boxText}>{code[i] ?? ''}</Text>
-                </View>
-              ))}
+          {devCode && (
+            <View style={styles.devBox}>
+              <Text style={styles.devText}>Dev Code: {devCode}</Text>
             </View>
+          )}
+
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => hiddenInput.current?.focus()}
+            style={styles.codeContainer}
+          >
+            {Array.from({ length: OTP_LENGTH }).map((_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.codeBox,
+                  i === code.length && styles.codeBoxActive,
+                  error && styles.codeBoxError,
+                ]}
+              >
+                <Text style={styles.codeText}>{code[i] || ''}</Text>
+              </View>
+            ))}
           </TouchableOpacity>
+
           <TextInput
             ref={hiddenInput}
-            style={styles.hiddenInput}
             value={code}
             onChangeText={(t) => setCode(t.replace(/\D/g, '').slice(0, OTP_LENGTH))}
             keyboardType="number-pad"
-            maxLength={OTP_LENGTH}
+            style={styles.hiddenInput}
             autoFocus
           />
 
-          {devCode && (
-            <TouchableOpacity style={styles.devHint} onPress={() => setCode(devCode)} activeOpacity={0.7}>
-              <Text style={styles.devHintText}>Dev code: {devCode} — tap to autofill</Text>
-            </TouchableOpacity>
-          )}
+          {error && <Text style={styles.error}>{error}</Text>}
 
           {needsName && (
-            <View style={styles.nameBlock}>
-              <Text style={styles.nameLabel}>Your name</Text>
+            <>
+              <Text style={styles.nameLabel}>What's your name?</Text>
               <TextInput
                 style={styles.nameInput}
                 value={name}
                 onChangeText={setName}
-                placeholder="e.g. Sambhav"
+                placeholder="Enter your name"
                 placeholderTextColor={colors.onSurfaceVariant}
                 autoCapitalize="words"
               />
-            </View>
+            </>
           )}
 
-          {error && <Text style={styles.error}>{error}</Text>}
-
-          <View style={styles.resendRow}>
-            {seconds > 0 ? (
-              <Text style={styles.resendMuted}>Resend code in {seconds}s</Text>
-            ) : (
-              <TouchableOpacity onPress={onResend} activeOpacity={0.7}>
-                <Text style={styles.resendActive}>Resend code</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+          <TouchableOpacity
+            onPress={onResend}
+            disabled={seconds > 0}
+            style={styles.resendButton}
+          >
+            <Text style={[styles.resendText, seconds > 0 && styles.resendDisabled]}>
+              {seconds > 0 ? `Resend code in ${seconds}s` : 'Resend code'}
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.footer}>
+        <View style={styles.bottom}>
           <PrimaryButton
-            label="Verify & Continue"
-            icon="check"
+            title="Verify"
             onPress={onVerify}
             loading={loading}
             disabled={!canVerify}
@@ -146,46 +153,90 @@ export default function OtpScreen({ navigation, route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+  root: { flex: 1, backgroundColor: colors.surface },
   flex: { flex: 1 },
-  content: { flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.lg },
-  title: { ...typography.headlineMd, color: colors.onSurface },
-  subtitle: { ...typography.bodyMd, color: colors.onSurfaceVariant, marginTop: spacing.sm, marginBottom: spacing.xl },
-  phone: { color: colors.onSurface, fontWeight: '700' },
-
-  boxesRow: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm },
-  box: {
-    flex: 1,
+  content: { flex: 1, padding: spacing.marginMobile },
+  title: {
+    ...typography.headlineLg,
+    color: colors.onSurface,
+    marginBottom: spacing.xs,
+  },
+  subtitle: {
+    ...typography.bodyLg,
+    color: colors.onSurfaceVariant,
+    marginBottom: spacing.xl,
+  },
+  devBox: {
+    backgroundColor: colors.tertiaryContainer,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.sm,
+    marginBottom: spacing.md,
+  },
+  devText: {
+    ...typography.labelLg,
+    color: colors.onTertiaryContainer,
+  },
+  codeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: spacing.xl,
+  },
+  codeBox: {
+    width: 48,
     height: 56,
-    borderRadius: radii.default,
-    backgroundColor: colors.surfaceContainerLow,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.outline,
+    borderRadius: radii.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  boxActive: { borderColor: colors.primary },
-  boxText: { ...typography.headlineMd, color: colors.onSurface },
-  hiddenInput: { position: 'absolute', width: 1, height: 1, opacity: 0 },
-
-  devHint: { marginTop: spacing.md, alignSelf: 'flex-start' },
-  devHintText: { ...typography.bodySm, color: colors.secondary },
-
-  nameBlock: { marginTop: spacing.xl },
-  nameLabel: { ...typography.labelMd, color: colors.onSurfaceVariant, marginBottom: spacing.xs },
+  codeBoxActive: {
+    borderColor: colors.primary,
+    borderWidth: 2,
+  },
+  codeBoxError: {
+    borderColor: colors.error,
+  },
+  codeText: {
+    ...typography.headlineMd,
+    color: colors.onSurface,
+  },
+  hiddenInput: {
+    position: 'absolute',
+    left: -9999,
+    opacity: 0,
+  },
+  error: {
+    ...typography.bodyMd,
+    color: colors.error,
+    marginBottom: spacing.md,
+  },
+  nameLabel: {
+    ...typography.labelLg,
+    color: colors.onSurface,
+    marginBottom: spacing.sm,
+  },
   nameInput: {
-    height: 56,
+    borderWidth: 1,
+    borderColor: colors.outline,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.lg,
     ...typography.bodyLg,
     color: colors.onSurface,
-    backgroundColor: colors.surfaceContainerLow,
-    borderRadius: radii.default,
-    paddingHorizontal: spacing.md,
+    marginBottom: spacing.xl,
   },
-
-  error: { ...typography.bodySm, color: colors.error, marginTop: spacing.md },
-  resendRow: { marginTop: spacing.lg },
-  resendMuted: { ...typography.bodySm, color: colors.onSurfaceVariant },
-  resendActive: { ...typography.bodyMd, color: colors.secondary, fontWeight: '600' },
-
-  footer: { paddingHorizontal: spacing.marginMobile, paddingBottom: spacing.lg },
+  resendButton: {
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+  },
+  resendText: {
+    ...typography.labelLg,
+    color: colors.primary,
+  },
+  resendDisabled: {
+    color: colors.onSurfaceVariant,
+  },
+  bottom: { padding: spacing.marginMobile },
 });
