@@ -1,4 +1,4 @@
-# RideNow Rider App
+# NaviGoIn Rider App
 
 Expo-based rider application with integrated Mappls (MapMyIndia) maps via WebView.
 
@@ -123,60 +123,12 @@ When configured, the app shows:
 - Real Mappls vector map tiles
 - Live markers for pickup/drop/driver
 - Actual route polylines
-- Pan and zoom functionality
+- Pan and zoom capabilities
 
-## Performance Notes
+## Company
 
-- WebView maps have lower performance than native SDKs
-- Acceptable for MVP/v1 implementation
-- Native SDK migration planned as follow-up
-
-## Troubleshooting
-
-### Map not showing
-1. Check if `EXPO_PUBLIC_MAPPLS_MAP_KEY` is set
-2. Verify key is valid at apps.mappls.com
-3. Check network connectivity
-4. Look for errors in console
-
-### WebView errors
-1. Ensure `react-native-webview` is installed
-2. Clear Expo cache: `expo start -c`
-3. Reinstall node_modules
-
-### Build issues
-1. This app works in Expo Go - no prebuild needed
-2. For production builds, follow Expo's build guide
-
-## API Documentation
-
-### MapplsWebMap Props
-
-```typescript
-interface MapplsWebMapProps {
-  center?: LatLng;           // Map center position
-  zoom?: number;             // Zoom level (3-20)
-  markers?: MapMarker[];     // Array of markers
-  routePath?: LatLng[];      // Route coordinates
-  onReady?: () => void;      // Map loaded callback
-  onError?: (e) => void;     // Error callback
-  onMarkerClick?: (id) => void; // Marker click handler
-}
-```
-
-### TripMap Props
-
-```typescript
-interface TripMapProps {
-  phase: TripPhase;          // Current trip phase
-  progress: number;          // Progress (0-1)
-  pickupLocation?: LatLng;   // Pickup coordinates
-  dropLocation?: LatLng;     // Drop coordinates
-  driverLocation?: LatLng;   // Driver coordinates
-  routePath?: LatLng[];      // Route path
-}
-```
+**NaviGoIn** - Your trusted ride-sharing partner
 
 ## License
 
-Proprietary - RideNow Inc.
+© 2024 NaviGoIn. All rights reserved.
