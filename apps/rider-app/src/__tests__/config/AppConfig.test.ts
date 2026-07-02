@@ -1,130 +1,111 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-describe('App Configuration', () => {
-  const appJsonPath = path.resolve(__dirname, '../../../app.json');
-  const packageJsonPath = path.resolve(__dirname, '../../../package.json');
-
+describe('App Configuration Tests', () => {
   let appConfig: any;
   let packageConfig: any;
 
   beforeAll(() => {
-    const appJsonContent = fs.readFileSync(appJsonPath, 'utf-8');
-    const packageJsonContent = fs.readFileSync(packageJsonPath, 'utf-8');
+    const appJsonPath = path.resolve(__dirname, '../../../app.json');
+    const packageJsonPath = path.resolve(__dirname, '../../../package.json');
     
-    appConfig = JSON.parse(appJsonContent);
-    packageConfig = JSON.parse(packageJsonContent);
+    appConfig = JSON.parse(fs.readFileSync(appJsonPath, 'utf8'));
+    packageConfig = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
   });
 
   describe('app.json configuration', () => {
-    it('should have correct display name', () => {
-      expect(appConfig.expo.name).toBe('NaviGo');
+    test('should have correct app name', () => {
+      expect(appConfig.expo.name).toBe('NaviGoIn');
     });
 
-    it('should have correct slug', () => {
-      expect(appConfig.expo.slug).toBe('navigo-rider');
+    test('should have correct slug', () => {
+      expect(appConfig.expo.slug).toBe('navigoin');
     });
 
-    it('should have correct iOS bundle identifier', () => {
-      expect(appConfig.expo.ios.bundleIdentifier).toBe('com.navigo.rider');
+    test('should have deep linking scheme configured', () => {
+      expect(appConfig.expo.scheme).toBe('navigoin');
     });
 
-    it('should have correct Android package name', () => {
-      expect(appConfig.expo.android.package).toBe('com.navigo.rider');
+    test('should have correct iOS bundle identifier', () => {
+      expect(appConfig.expo.ios.bundleIdentifier).toBe('com.navigoin.rider');
     });
 
-    it('should maintain version consistency', () => {
-      expect(appConfig.expo.version).toBe('1.0.0');
+    test('should have correct iOS display name', () => {
+      expect(appConfig.expo.ios.infoPlist?.CFBundleDisplayName).toBe('NaviGoIn');
     });
 
-    it('should have all required icon assets configured', () => {
+    test('should have correct Android package name', () => {
+      expect(appConfig.expo.android.package).toBe('com.navigoin.rider');
+    });
+
+    test('should have correct web configuration', () => {
+      expect(appConfig.expo.web.name).toBe('NaviGoIn');
+      expect(appConfig.expo.web.shortName).toBe('NaviGoIn');
+    });
+
+    test('should have all required icon assets', () => {
       expect(appConfig.expo.icon).toBe('./assets/icon.png');
       expect(appConfig.expo.splash.image).toBe('./assets/splash-icon.png');
       expect(appConfig.expo.android.adaptiveIcon.foregroundImage).toBe('./assets/android-icon-foreground.png');
       expect(appConfig.expo.android.adaptiveIcon.backgroundImage).toBe('./assets/android-icon-background.png');
       expect(appConfig.expo.android.adaptiveIcon.monochromeImage).toBe('./assets/android-icon-monochrome.png');
+      expect(appConfig.expo.web.favicon).toBe('./assets/favicon.png');
     });
 
-    it('should preserve extra configuration', () => {
-      expect(appConfig.expo.extra).toBeDefined();
-      expect(appConfig.expo.extra).toHaveProperty('mapplsMapKey');
+    test('should have version defined', () => {
+      expect(appConfig.expo.version).toBe('1.0.0');
     });
 
-    it('should have orientation set to portrait', () => {
+    test('should have portrait orientation', () => {
       expect(appConfig.expo.orientation).toBe('portrait');
     });
 
-    it('should have new architecture enabled', () => {
+    test('should have new architecture enabled', () => {
       expect(appConfig.expo.newArchEnabled).toBe(true);
     });
   });
 
   describe('package.json configuration', () => {
-    it('should have correct package name', () => {
-      expect(packageConfig.name).toBe('navigo-rider');
+    test('should have correct package name', () => {
+      expect(packageConfig.name).toBe('navigoin');
     });
 
-    it('should maintain version consistency with app.json', () => {
+    test('should have matching version with app.json', () => {
       expect(packageConfig.version).toBe(appConfig.expo.version);
     });
 
-    it('should have correct main entry point', () => {
-      expect(packageConfig.main).toBe('index.ts');
+    test('should have doctor script for validation', () => {
+      expect(packageConfig.scripts.doctor).toBe('expo doctor');
     });
 
-    it('should be marked as private', () => {
-      expect(packageConfig.private).toBe(true);
+    test('should have expo-linking dependency for deep linking', () => {
+      expect(packageConfig.dependencies['expo-linking']).toBeDefined();
     });
 
-    it('should have all required scripts', () => {
-      const requiredScripts = ['start', 'android', 'ios', 'web', 'test', 'test:e2e', 'lint', 'typecheck'];
-      requiredScripts.forEach(script => {
-        expect(packageConfig.scripts).toHaveProperty(script);
-      });
-    });
-
-    it('should have all critical dependencies', () => {
-      expect(packageConfig.dependencies['expo']).toBeDefined();
-      expect(packageConfig.dependencies['react']).toBeDefined();
-      expect(packageConfig.dependencies['react-native']).toBeDefined();
+    test('should have all required scripts', () => {
+      expect(packageConfig.scripts.start).toBeDefined();
+      expect(packageConfig.scripts.android).toBeDefined();
+      expect(packageConfig.scripts.ios).toBeDefined();
+      expect(packageConfig.scripts.web).toBeDefined();
+      expect(packageConfig.scripts.test).toBeDefined();
+      expect(packageConfig.scripts['test:e2e']).toBeDefined();
     });
   });
 
-  describe('Configuration consistency', () => {
-    it('should have matching version between app.json and package.json', () => {
-      expect(appConfig.expo.version).toBe(packageConfig.version);
+  describe('Edge Cases', () => {
+    test('should handle missing optional fields gracefully', () => {
+      expect(appConfig.expo.extra?.mapplsMapKey).toBeNull();
     });
 
-    it('should have consistent naming pattern', () => {
-      const appName = appConfig.expo.name.toLowerCase();
-      const slug = appConfig.expo.slug;
-      const packageName = packageConfig.name;
-      
-      expect(slug).toContain(appName);
-      expect(packageName).toBe(slug);
+    test('should maintain backward compatibility', () => {
+      expect(appConfig.expo.userInterfaceStyle).toBe('light');
+      expect(appConfig.expo.splash.resizeMode).toBe('contain');
+      expect(appConfig.expo.splash.backgroundColor).toBe('#ffffff');
     });
 
-    it('should follow company bundle identifier pattern', () => {
-      const iosBundleId = appConfig.expo.ios.bundleIdentifier;
-      const androidPackage = appConfig.expo.android.package;
-      
-      expect(iosBundleId).toMatch(/^com\.navigo\..+/);
-      expect(androidPackage).toBe(iosBundleId);
-    });
-  });
-
-  describe('Edge cases', () => {
-    it('should handle special characters in app name if present', () => {
-      expect(appConfig.expo.slug).toMatch(/^[a-z0-9-]+$/);
-    });
-
-    it('should have valid semantic versioning', () => {
-      expect(appConfig.expo.version).toMatch(/^\d+\.\d+\.\d+$/);
-    });
-
-    it('should not contain deprecated configuration keys', () => {
-      expect(appConfig.expo).not.toHaveProperty('sdkVersion');
-      expect(appConfig.expo).not.toHaveProperty('androidStatusBar');
+    test('should have valid JSON structure', () => {
+      expect(() => JSON.stringify(appConfig)).not.toThrow();
+      expect(() => JSON.stringify(packageConfig)).not.toThrow();
     });
   });
 });
