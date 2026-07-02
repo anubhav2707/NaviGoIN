@@ -49,7 +49,7 @@ export default function PhoneScreen({ navigation }: Props) {
             <View style={styles.logo}>
               <MaterialIcons name="local-taxi" size={28} color={colors.onPrimary} />
             </View>
-            <Text style={styles.brand}>RideNow</Text>
+            <Text style={styles.brand}>NaviGoIn</Text>
           </View>
 
           <Text style={styles.title}>Enter your mobile number</Text>
@@ -72,16 +72,15 @@ export default function PhoneScreen({ navigation }: Props) {
           </View>
         </View>
 
-        <View style={styles.footer}>
+        <View style={styles.bottom}>
           <PrimaryButton
-            label="Continue"
-            icon="arrow-forward"
+            title="Continue"
             onPress={onContinue}
             loading={loading}
             disabled={!valid}
           />
-          <Text style={styles.terms}>
-            By continuing you agree to our Terms of Service and Privacy Policy.
+          <Text style={styles.disclaimer}>
+            By continuing, you agree to our Terms of Service and Privacy Policy
           </Text>
         </View>
       </KeyboardAvoidingView>
@@ -90,10 +89,14 @@ export default function PhoneScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
+  root: { flex: 1, backgroundColor: colors.surface },
   flex: { flex: 1 },
-  content: { flex: 1, paddingHorizontal: spacing.marginMobile, paddingTop: spacing.xl * 2 },
-  brandRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.xl * 1.5 },
+  content: { flex: 1, padding: spacing.marginMobile },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+  },
   logo: {
     width: 48,
     height: 48,
@@ -101,30 +104,50 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: spacing.sm,
   },
-  brand: { ...typography.displayLg, color: colors.primary },
-  title: { ...typography.headlineMd, color: colors.onSurface },
-  subtitle: { ...typography.bodyMd, color: colors.onSurfaceVariant, marginTop: spacing.sm, marginBottom: spacing.xl },
-  inputRow: { flexDirection: 'row', gap: spacing.sm },
+  brand: {
+    ...typography.displayMd,
+    color: colors.primary,
+  },
+  title: {
+    ...typography.headlineLg,
+    color: colors.onSurface,
+    marginBottom: spacing.xs,
+  },
+  subtitle: {
+    ...typography.bodyLg,
+    color: colors.onSurfaceVariant,
+    marginBottom: spacing.xl,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    borderWidth: 1,
+    borderColor: colors.outline,
+    borderRadius: radii.md,
+    overflow: 'hidden',
+  },
   prefix: {
-    height: 56,
+    backgroundColor: colors.surfaceContainerLowest,
     paddingHorizontal: spacing.md,
-    borderRadius: radii.default,
-    backgroundColor: colors.surfaceContainerLow,
-    alignItems: 'center',
     justifyContent: 'center',
   },
-  prefixText: { ...typography.bodyLg, color: colors.onSurface, fontWeight: '600' },
-  input: {
-    flex: 1,
-    height: 56,
+  prefixText: {
     ...typography.bodyLg,
     color: colors.onSurface,
-    backgroundColor: colors.surfaceContainerLow,
-    borderRadius: radii.default,
-    paddingHorizontal: spacing.md,
-    letterSpacing: 1,
   },
-  footer: { paddingHorizontal: spacing.marginMobile, paddingBottom: spacing.lg, gap: spacing.md },
-  terms: { ...typography.bodySm, color: colors.onSurfaceVariant, textAlign: 'center' },
+  input: {
+    flex: 1,
+    ...typography.bodyLg,
+    color: colors.onSurface,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.lg,
+  },
+  bottom: { padding: spacing.marginMobile },
+  disclaimer: {
+    ...typography.bodyMd,
+    color: colors.onSurfaceVariant,
+    textAlign: 'center',
+    marginTop: spacing.md,
+  },
 });
