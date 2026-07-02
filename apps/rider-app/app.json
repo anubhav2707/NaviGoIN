@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "RideNow",
-    "slug": "rider-app",
+    "name": "NaviGo",
+    "slug": "navigo-rider",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ridenow.rider"
+      "bundleIdentifier": "com.navigo.rider"
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +22,7 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "com.ridenow.rider"
+      "package": "com.navigo.rider"
     },
     "web": {
       "favicon": "./assets/favicon.png"
