@@ -45,7 +45,7 @@ const SECTIONS: MenuSection[] = [
         title: 'Referrals',
         sub: 'Earn ₹100 for each friend',
         onPress: () =>
-          shareMessage('Join me on RideNow! Use my code RIDE100 for ₹100 off your first ride.'),
+          shareMessage('Join me on NaviGoIn! Use my code NAVI100 for ₹100 off your first ride.'),
       },
     ],
   },
@@ -68,65 +68,67 @@ export default function AccountScreen() {
         <View style={[styles.hero, elevation.level1]}>
           <View style={styles.heroLeft}>
             <View style={styles.heroAvatar}>
-              <MaterialIcons name="person" size={32} color={colors.onSurfaceVariant} />
-              <View style={styles.premiumBadge}>
-                <Text style={styles.premiumText}>PREMIUM</Text>
-              </View>
+              <MaterialIcons name="person" size={28} color={colors.onPrimary} />
             </View>
             <View>
-              <Text style={styles.heroName}>{user?.name ?? 'Rider'}</Text>
-              <Text style={styles.heroMeta}>{user?.phone ?? ''} • Rating 4.9</Text>
+              <Text style={styles.heroName}>{user?.name || 'Guest User'}</Text>
+              <Text style={styles.heroPhone}>{user?.phone || '+91 98765 43210'}</Text>
             </View>
           </View>
-          <View style={styles.ratingPill}>
-            <MaterialIcons name="star" size={16} color="#f5b400" />
-            <Text style={styles.ratingValue}>4.9</Text>
-          </View>
+          <TouchableOpacity style={styles.heroEdit}>
+            <MaterialIcons name="edit" size={20} color={colors.primary} />
+          </TouchableOpacity>
         </View>
 
         {/* Menu sections */}
-        {SECTIONS.map((section, si) => (
-          <View key={si} style={[styles.section, elevation.level1]}>
-            {section.heading && (
-              <View style={styles.sectionHeading}>
-                <Text style={styles.sectionHeadingText}>{section.heading}</Text>
-              </View>
-            )}
-            {section.items.map((item, ii) => (
-              <TouchableOpacity
-                key={item.title}
-                style={[styles.menuRow, ii < section.items.length - 1 && styles.menuRowBorder]}
-                activeOpacity={0.7}
-                onPress={() => item.onPress?.(navigation)}
-              >
-                <View style={styles.menuLeft}>
-                  <MaterialIcons
-                    name={item.icon}
-                    size={22}
-                    color={item.danger ? colors.error : colors.primary}
-                  />
-                  <View>
-                    <Text style={[styles.menuTitle, item.danger && { color: colors.error }]}>
+        {SECTIONS.map((section, i) => (
+          <View key={i} style={styles.section}>
+            {section.heading && <Text style={styles.sectionHeading}>{section.heading}</Text>}
+            <View style={[styles.sectionCard, elevation.level1]}>
+              {section.items.map((item, j) => (
+                <TouchableOpacity
+                  key={j}
+                  style={[
+                    styles.menuItem,
+                    j < section.items.length - 1 && styles.menuItemBorder,
+                  ]}
+                  onPress={() => item.onPress?.(navigation)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.menuIcon, item.danger && styles.menuIconDanger]}>
+                    <MaterialIcons
+                      name={item.icon}
+                      size={20}
+                      color={item.danger ? colors.error : colors.primary}
+                    />
+                  </View>
+                  <View style={styles.menuContent}>
+                    <Text style={[styles.menuTitle, item.danger && styles.menuTitleDanger]}>
                       {item.title}
                     </Text>
                     {item.sub && <Text style={styles.menuSub}>{item.sub}</Text>}
                   </View>
-                </View>
-                <MaterialIcons name="chevron-right" size={22} color={colors.onSurfaceVariant} />
-              </TouchableOpacity>
-            ))}
+                  <MaterialIcons name="chevron-right" size={20} color={colors.onSurfaceVariant} />
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
         ))}
 
+        {/* Sign out button */}
         <TouchableOpacity
-          style={styles.signOut}
-          activeOpacity={0.6}
-          onPress={() =>
-            confirm('Sign out?', 'You will need to log in again to book rides.', signOut, 'Sign out')
-          }
+          style={styles.signOutButton}
+          onPress={async () => {
+            const ok = await confirm('Sign Out', 'Are you sure you want to sign out?');
+            if (ok) signOut();
+          }}
+          activeOpacity={0.7}
         >
+          <MaterialIcons name="logout" size={20} color={colors.error} />
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
+
+        <Text style={styles.version}>NaviGoIn v1.0.0</Text>
       </ScrollView>
     </View>
   );
@@ -139,80 +141,88 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   brand: { ...typography.headlineMd, color: colors.primary, fontWeight: '700' },
-  content: { paddingHorizontal: spacing.marginMobile, paddingBottom: spacing.xl },
-
+  content: { paddingBottom: spacing.xxl },
   hero: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: radii.md,
-    padding: spacing.lg,
+    backgroundColor: colors.surface,
+    marginHorizontal: spacing.marginMobile,
     marginBottom: spacing.lg,
+    padding: spacing.md,
+    borderRadius: radii.lg,
   },
-  heroLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, flex: 1 },
+  heroLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   heroAvatar: {
-    width: 64,
-    height: 64,
+    width: 48,
+    height: 48,
     borderRadius: radii.full,
-    backgroundColor: colors.surfaceContainerHigh,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  premiumBadge: {
-    position: 'absolute',
-    bottom: -6,
-    right: -10,
-    backgroundColor: colors.secondary,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+  heroName: { ...typography.bodyLg, color: colors.onSurface, fontWeight: '600' },
+  heroPhone: { ...typography.bodyMd, color: colors.onSurfaceVariant },
+  heroEdit: {
+    width: 32,
+    height: 32,
     borderRadius: radii.full,
-  },
-  premiumText: { fontSize: 8, fontWeight: '700', color: colors.onSecondary, letterSpacing: 0.5 },
-  heroName: { ...typography.headlineSm, color: colors.primary },
-  heroMeta: { ...typography.bodySm, color: colors.onSurfaceVariant },
-  ratingPill: {
-    flexDirection: 'row',
+    backgroundColor: colors.surfaceContainerHighest,
     alignItems: 'center',
-    gap: spacing.xs,
-    backgroundColor: colors.surfaceContainerLow,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radii.full,
+    justifyContent: 'center',
   },
-  ratingValue: { ...typography.bodyMd, color: colors.primary, fontWeight: '700' },
-
-  section: {
-    backgroundColor: colors.surfaceContainerLowest,
-    borderRadius: radii.md,
-    marginBottom: spacing.md,
-    overflow: 'hidden',
-  },
+  section: { marginBottom: spacing.lg },
   sectionHeading: {
-    padding: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.outlineVariant,
-  },
-  sectionHeadingText: {
     ...typography.labelMd,
     color: colors.onSurfaceVariant,
-    letterSpacing: 1.5,
+    marginHorizontal: spacing.marginMobile,
+    marginBottom: spacing.xs,
   },
-  menuRow: {
+  sectionCard: {
+    backgroundColor: colors.surface,
+    marginHorizontal: spacing.marginMobile,
+    borderRadius: radii.lg,
+  },
+  menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     padding: spacing.md,
+    gap: spacing.md,
   },
-  menuRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.outlineVariant },
-  menuLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  menuTitle: { ...typography.bodyMd, color: colors.onSurface, fontWeight: '700' },
-  menuSub: { ...typography.bodySm, color: colors.onSurfaceVariant },
-
-  signOut: { paddingVertical: spacing.lg, alignItems: 'center' },
-  signOutText: {
+  menuItemBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surfaceVariant,
+  },
+  menuIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: radii.md,
+    backgroundColor: colors.primaryContainer,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuIconDanger: { backgroundColor: colors.errorContainer },
+  menuContent: { flex: 1 },
+  menuTitle: { ...typography.bodyLg, color: colors.onSurface },
+  menuTitleDanger: { color: colors.error },
+  menuSub: { ...typography.bodyMd, color: colors.onSurfaceVariant },
+  signOutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    marginHorizontal: spacing.marginMobile,
+    marginTop: spacing.xl,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.error,
+    borderRadius: radii.md,
+  },
+  signOutText: { ...typography.labelLg, color: colors.error },
+  version: {
     ...typography.labelMd,
     color: colors.onSurfaceVariant,
-    textDecorationLine: 'underline',
+    textAlign: 'center',
+    marginTop: spacing.lg,
   },
 });
