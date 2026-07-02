@@ -12,13 +12,13 @@ module.exports = {
   apps: {
     'ios.debug': {
       type: 'ios.app',
-      binaryPath: 'ios/build/Build/Products/Debug-iphonesimulator/RideNow.app',
-      build: 'xcodebuild -workspace ios/RideNow.xcworkspace -scheme RideNow -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build'
+      binaryPath: 'ios/build/Build/Products/Debug-iphonesimulator/NaviGoIn.app',
+      build: 'xcodebuild -workspace ios/navigoin.xcworkspace -scheme navigoin -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build'
     },
     'ios.release': {
       type: 'ios.app',
-      binaryPath: 'ios/build/Build/Products/Release-iphonesimulator/RideNow.app',
-      build: 'xcodebuild -workspace ios/RideNow.xcworkspace -scheme RideNow -configuration Release -sdk iphonesimulator -derivedDataPath ios/build'
+      binaryPath: 'ios/build/Build/Products/Release-iphonesimulator/NaviGoIn.app',
+      build: 'xcodebuild -workspace ios/navigoin.xcworkspace -scheme navigoin -configuration Release -sdk iphonesimulator -derivedDataPath ios/build'
     },
     'android.debug': {
       type: 'android.apk',
@@ -36,13 +36,19 @@ module.exports = {
     simulator: {
       type: 'ios.simulator',
       device: {
-        type: 'iPhone 15'
+        type: 'iPhone 14'
+      }
+    },
+    attached: {
+      type: 'ios.simulator',
+      device: {
+        type: 'iPhone 14'
       }
     },
     emulator: {
       type: 'android.emulator',
       device: {
-        avdName: 'Pixel_7_API_34'
+        avdName: 'Pixel_4_API_30'
       }
     }
   },
@@ -54,6 +60,14 @@ module.exports = {
     'ios.sim.release': {
       device: 'simulator',
       app: 'ios.release'
+    },
+    'android.att.debug': {
+      device: 'attached',
+      app: 'android.debug'
+    },
+    'android.att.release': {
+      device: 'attached',
+      app: 'android.release'
     },
     'android.emu.debug': {
       device: 'emulator',
