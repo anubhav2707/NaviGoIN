@@ -1,11 +1,11 @@
 <!DOCTYPE html><html class="light" lang="en"><head>
 <meta charset="utf-8">
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
-<title>Home - RideNow</title>
+<title>NaviGoIN - Book Your Ride</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 <script id="tailwind-config">
       tailwind.config = {
         darkMode: "class",
@@ -36,7 +36,7 @@
                     "on-tertiary": "#ffffff",
                     "surface-container": "#eeeeee",
                     "surface-dim": "#dadada",
-                    "primary-fixed-dim": "#c6c6c6",
+                    "primary-fixed-dim": "#c6c6c5",
                     "on-secondary-fixed": "#001355",
                     "background": "#f9f9f9",
                     "inverse-on-surface": "#f1f1f1",
@@ -46,101 +46,14 @@
                     "on-background": "#1a1c1c",
                     "outline-variant": "#cfc4c5",
                     "primary-fixed": "#e2e2e2",
-                    "on-tertiary-container": "#858383",
-                    "on-secondary-fixed-variant": "#0035bd",
-                    "on-primary-fixed-variant": "#474747",
-                    "secondary": "#0040df",
-                    "on-surface-variant": "#4c4546",
-                    "primary": "#000000",
-                    "surface-container-highest": "#e2e2e2",
-                    "on-error-container": "#410002",
-                    "surface-container-low": "#f3f3f3",
-                    "surface-bright": "#f9f9f9",
-                    "secondary-fixed-dim": "#b8c3ff",
-                    "on-primary-container": "#848484",
-                    "outline": "#7e7576"
-                  },
-                  "fontFamily": {
-                    "inter": ["Inter", "sans-serif"]
-                  }
-          },
-        },
+                    "on-tertiary-container": "#858383"
+            }
+          }
+        }
       }
-    </script>
+</script>
 </head>
-<body class="bg-background text-on-background font-inter">
-    <div class="max-w-sm mx-auto bg-surface min-h-screen">
-        <!-- Map Background -->
-        <div class="relative h-screen bg-surface-dim">
-            <!-- Map placeholder -->
-            <div class="absolute inset-0 bg-gradient-to-b from-surface-dim to-surface-container"></div>
-            
-            <!-- Top Bar -->
-            <div class="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-surface/80 to-transparent">
-                <div class="flex items-center justify-between">
-                    <button class="p-2 bg-surface rounded-full shadow-md">
-                        <span class="material-symbols-outlined text-on-surface">menu</span>
-                    </button>
-                    <div class="bg-surface px-4 py-2 rounded-full shadow-md">
-                        <span class="text-sm font-semibold text-on-surface">RideNow</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Bottom Sheet -->
-            <div class="absolute bottom-0 left-0 right-0 bg-surface rounded-t-3xl shadow-2xl">
-                <div class="w-12 h-1 bg-surface-variant rounded-full mx-auto mt-3 mb-4"></div>
-                
-                <div class="px-6 pb-8">
-                    <h2 class="text-xl font-bold text-on-surface mb-4">Where to?</h2>
-                    
-                    <!-- Search Input -->
-                    <div class="relative mb-4">
-                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-                        <input type="text" placeholder="Enter destination" class="w-full pl-12 pr-4 py-3 bg-surface-container rounded-xl text-on-surface placeholder-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary">
-                    </div>
-                    
-                    <!-- Quick Actions -->
-                    <div class="grid grid-cols-2 gap-3 mb-6">
-                        <button class="flex items-center p-3 bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors">
-                            <span class="material-symbols-outlined text-primary mr-3">home</span>
-                            <div class="text-left">
-                                <p class="text-sm font-semibold text-on-surface">Home</p>
-                                <p class="text-xs text-on-surface-variant">Set location</p>
-                            </div>
-                        </button>
-                        <button class="flex items-center p-3 bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors">
-                            <span class="material-symbols-outlined text-primary mr-3">work</span>
-                            <div class="text-left">
-                                <p class="text-sm font-semibold text-on-surface">Work</p>
-                                <p class="text-xs text-on-surface-variant">Set location</p>
-                            </div>
-                        </button>
-                    </div>
-                    
-                    <!-- Recent Rides -->
-                    <div>
-                        <h3 class="text-sm font-semibold text-on-surface-variant mb-3">Recent</h3>
-                        <div class="space-y-2">
-                            <button class="flex items-center w-full p-3 hover:bg-surface-container rounded-xl transition-colors">
-                                <span class="material-symbols-outlined text-on-surface-variant mr-3">schedule</span>
-                                <div class="flex-1 text-left">
-                                    <p class="text-sm font-medium text-on-surface">Coffee Shop</p>
-                                    <p class="text-xs text-on-surface-variant">123 Main St</p>
-                                </div>
-                            </button>
-                            <button class="flex items-center w-full p-3 hover:bg-surface-container rounded-xl transition-colors">
-                                <span class="material-symbols-outlined text-on-surface-variant mr-3">schedule</span>
-                                <div class="flex-1 text-left">
-                                    <p class="text-sm font-medium text-on-surface">Airport</p>
-                                    <p class="text-xs text-on-surface-variant">Terminal 2</p>
-                                </div>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<body>
+<!-- NaviGoIN Home Book Ride Screen -->
 </body>
 </html>
