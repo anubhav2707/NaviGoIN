@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "RideNow",
+    "name": "MyApp",
     "slug": "rider-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ridenow.rider"
+      "bundleIdentifier": "com.myapp.rider"
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +22,7 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "com.ridenow.rider"
+      "package": "com.myapp.rider"
     },
     "web": {
       "favicon": "./assets/favicon.png"
