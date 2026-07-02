@@ -1,4 +1,4 @@
-name: ridenow
+name: myapp
 
 services:
   postgres:
@@ -8,15 +8,15 @@ services:
     image: postgis/postgis:16-3.4-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ridenow
-      POSTGRES_PASSWORD: ridenow
-      POSTGRES_DB: ridenow
+      POSTGRES_USER: myapp
+      POSTGRES_PASSWORD: myapp
+      POSTGRES_DB: myapp
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ridenow -d ridenow"]
+      test: ["CMD-SHELL", "pg_isready -U myapp -d myapp"]
       interval: 5s
       timeout: 5s
       retries: 5
