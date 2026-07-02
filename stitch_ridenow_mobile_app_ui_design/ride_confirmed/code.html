@@ -1,11 +1,11 @@
 <!DOCTYPE html><html class="light" lang="en"><head>
 <meta charset="utf-8">
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
-<title>RideNow - Ride Confirmed</title>
+<title>NaviGoIN - Ride Confirmed</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
 <!-- Shared Design System Tokens -->
 <script id="tailwind-config">
     tailwind.config = {
@@ -51,226 +51,14 @@
             "on-secondary-fixed-variant": "#0035bd",
             "on-primary-fixed-variant": "#474747",
             "secondary": "#0040df",
-            "on-surface-variant": "#4c4546",
-            "primary": "#000000",
-            "surface-container-highest": "#e2e2e2",
-            "on-error-container": "#93000a",
-            "surface-bright": "#f9f9f9",
-            "secondary-fixed-dim": "#b8c3ff",
-            "outline": "#7e7576",
-            "on-primary-container": "#848484",
-            "surface-container-low": "#f3f3f3"
-          },
-          "spacing": {
-            "xl": "32px",
-            "gutter": "16px",
-            "xs": "4px",
-            "margin-desktop": "48px",
-            "sm": "8px",
-            "margin-mobile": "16px",
-            "md": "16px",
-            "base": "4px",
-            "lg": "24px"
-          },
-          "fontFamily": {
-            "label-md": ["Inter"],
-            "headline-md": ["Inter"],
-            "body-lg": ["Inter"],
-            "body-md": ["Inter"],
-            "display-lg": ["Inter"],
-            "headline-sm": ["Inter"],
-            "button-lg": ["Inter"],
-            "body-sm": ["Inter"]
-          },
-          "fontSize": {
-            "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600"}],
-            "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
-            "body-lg": ["18px", {"lineHeight": "26px", "fontWeight": "400"}],
-            "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
-            "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
-            "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
-            "button-lg": ["16px", {"lineHeight": "24px", "fontWeight": "600"}],
-            "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            "on-surface-variant": "#4c4546"
           }
         }
       }
     }
-  </script>
-<style>
-    .material-symbols-outlined {
-      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-    }
-    .map-container {
-      background-image: radial-gradient(#e2e2e2 1px, transparent 1px);
-      background-size: 20px 20px;
-    }
-    .car-marker {
-      transition: all 2s linear;
-    }
-    .pulse-animation {
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0% { transform: scale(1); opacity: 0.8; }
-      50% { transform: scale(1.5); opacity: 0; }
-      100% { transform: scale(1); opacity: 0; }
-    }
-    .glass-effect {
-      backdrop-filter: blur(8px);
-      background: rgba(255, 255, 255, 0.8);
-    }
-  </style>
-<style>
-    body {
-      min-height: max(884px, 100dvh);
-    }
-  </style>
-  </head>
-<body class="bg-background text-on-background font-body-md min-h-screen overflow-hidden">
-<!-- Top Navigation Shell -->
-<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile py-sm bg-transparent">
-<div class="flex items-center gap-sm">
-<button class="bg-surface-container-lowest shadow-md rounded-full p-2 flex items-center justify-center hover:bg-surface-container-low transition-colors active:scale-95 duration-100">
-<span class="material-symbols-outlined text-primary">arrow_back</span>
-</button>
-</div>
-<div class="text-headline-md font-headline-md font-bold text-primary">RideNow</div>
-<div class="flex items-center">
-<img alt="Profile" class="w-10 h-10 rounded-full border-2 border-surface-container-lowest shadow-sm" data-alt="A professional headshot of a young male professional with a friendly smile, set against a clean, out-of-focus urban background. The lighting is bright and natural, reflecting a high-quality light-mode UI aesthetic. The composition is a centered close-up with soft depth of field, maintaining a premium and trustworthy corporate feel consistent with a modern mobility application." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAR4r75fd2fIpP-CAL1XRVxALRbGmgqXb6Q_Zi1NVH0i78NaQvnpO_6BoSAL_bijCIOZvM8WWB7CA7bdwrzc7eyBuYnCs653o-JZZZtecBY9AfLIPhwXgPrXUBvXe8ATMyO3ov2dqmLlryQYfXWQ4ar04T7bn-4W9gwIlrX9mum30YvFkI4uR7l05rk5WbiRKkAz0Y33VLEu1Ukb2KlJ_U305I8xfbE-FN_gCec-3d5RTZ3JOOwFnVZFN0HsPumqmMYeHR-D8I_u2Y">
-</div>
-</header>
-<!-- Map Canvas Layer -->
-<main class="relative h-screen w-full map-container bg-surface-variant overflow-hidden">
-<div class="absolute inset-0 z-0">
-<img alt="Map of New Delhi city center" class="w-full h-full object-cover grayscale opacity-60" data-location="New Delhi" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLja-T2YGE8zQh9ZixmIIYCABGqNwgmjR_PpjMr-7qks95Vi7pdCBUwMUPOog11o6J9Jvqt-0FJoQ4TtpybNfc02wAbFVwIweN2wws0gh23Zpoa_cqQODvYL5yorYCEDf8ehDfRwxOn6ch60bhG-g9om7vP0E_7ptrH2r1o9O6ENNRbd-oCDq_Qw4bYW-LjCVWVFTKt1hCEyBe_0GExMYFDWOHN6VLWttBlPJFvEgSmf0OQN2N3lhje_U1-Lq4Zibx-ODFraJRzAY">
-<!-- Animated Route Path (Simplified Representation) -->
-<svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 800">
-<path class="opacity-30" d="M 200 600 Q 220 500 150 450 T 180 300" fill="none" stroke="#000000" stroke-dasharray="8 8" stroke-width="4"></path>
-</svg>
-<!-- Pickup Marker -->
-<div class="absolute top-[300px] left-[180px] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-<div class="bg-primary text-on-primary text-[10px] px-2 py-0.5 rounded-full mb-1 font-bold">PICKUP</div>
-<div class="w-4 h-4 bg-primary rounded-full border-2 border-white shadow-lg"></div>
-</div>
-<!-- Car Marker (Animated) -->
-<div class="car-marker absolute top-[600px] left-[200px] -translate-x-1/2 -translate-y-1/2 z-10" id="car-marker">
-<div class="relative">
-<div class="absolute inset-0 pulse-animation bg-secondary-container rounded-full w-12 h-12 -ml-3 -mt-3"></div>
-<div class="bg-surface-container-lowest p-2 rounded-full shadow-xl relative z-10 border border-outline-variant">
-<span class="material-symbols-outlined text-secondary text-3xl">directions_car</span>
-</div>
-</div>
-</div>
-</div>
-<!-- Status Floating Badge -->
-<div class="absolute top-24 left-1/2 -translate-x-1/2 z-20">
-<div class="glass-effect px-4 py-2 rounded-full shadow-lg border border-white flex items-center gap-sm">
-<span class="w-2 h-2 bg-secondary rounded-full animate-pulse"></span>
-<span class="text-label-md font-label-md text-primary">Arriving in 3 mins</span>
-</div>
-</div>
-</main>
-<!-- Driver/Ride Details Bottom Sheet -->
-<section class="fixed bottom-0 left-0 w-full z-40 bg-surface-container-lowest rounded-t-xl shadow-[0px_-4px_20px_rgba(0,0,0,0.05)] px-margin-mobile pt-md pb-xl">
-<!-- Drag Handle -->
-<div class="w-12 h-1.5 bg-surface-variant rounded-full mx-auto mb-md"></div>
-<div class="flex flex-col gap-lg">
-<!-- Driver and Vehicle Info -->
-<div class="flex justify-between items-start">
-<div class="flex gap-md">
-<div class="relative">
-<img alt="Driver Arjun" class="w-16 h-16 rounded-xl object-cover shadow-sm" data-alt="A detailed portrait of a middle-aged Indian driver named Arjun. He has a warm, professional expression and is wearing a clean, light-colored polo shirt. The lighting is soft and flattering, highlighting a clean-shaven face and short black hair. The background is a soft-focus interior of a modern car, reinforcing the professional ride-sharing context with high-contrast blacks and clean whites." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQMD51gqEV8tKri2yEOTqFbILj_wPs660XFT2WNYuEWIn6VnUeS_mr4f0ED7bxW6qD8rNp2nkEIJsr4-ibl0asq8Nt-LfPBD24RrokM_4gfStLNxVYqpl4s_matcAvOU6vie1P8atR1JhtdIpfOar_rFtgME-QvjZz6mvmv2GREaOiApcqTZXCBqCVQioZEwJDP1TkG1nLGHHqBajQPCPXO4y1qlldCyLuLfHshLqcsMSCRLFkqDhZkaARcaFe2_jBL1nIVBAyVho">
-<div class="absolute -bottom-1 -right-1 bg-surface-container-lowest shadow-sm rounded-full px-1.5 py-0.5 flex items-center gap-xs border border-outline-variant">
-<span class="text-[10px] font-bold text-primary">4.9</span>
-<span class="material-symbols-outlined text-[10px] text-yellow-500" style="font-variation-settings: 'FILL' 1;">star</span>
-</div>
-</div>
-<div>
-<h2 class="text-headline-sm font-headline-sm text-primary">Arjun</h2>
-<p class="text-body-sm text-on-surface-variant">White Maruti Suzuki Dzire</p>
-<p class="text-label-md font-label-md text-primary mt-xs tracking-wider">DL 1ZC 1234</p>
-</div>
-</div>
-<!-- OTP Badge -->
-<div class="bg-secondary-container/10 border border-secondary-container px-3 py-2 rounded-lg flex flex-col items-center justify-center min-w-[80px]">
-<span class="text-[10px] font-bold text-secondary uppercase tracking-widest">OTP</span>
-<span class="text-headline-sm font-headline-sm text-secondary tracking-widest">8842</span>
-</div>
-</div>
-<!-- Quick Actions Grid -->
-<div class="grid grid-cols-4 gap-md border-y border-surface-variant py-md">
-<button class="flex flex-col items-center gap-xs group">
-<div class="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-secondary-container group-hover:text-on-secondary-container transition-all active:scale-90">
-<span class="material-symbols-outlined">call</span>
-</div>
-<span class="text-label-md font-label-md">Call</span>
-</button>
-<button class="flex flex-col items-center gap-xs group">
-<div class="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-secondary-container group-hover:text-on-secondary-container transition-all active:scale-90">
-<span class="material-symbols-outlined">chat</span>
-</div>
-<span class="text-label-md font-label-md">Chat</span>
-</button>
-<button class="flex flex-col items-center gap-xs group">
-<div class="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-secondary-container group-hover:text-on-secondary-container transition-all active:scale-90">
-<span class="material-symbols-outlined">share</span>
-</div>
-<span class="text-label-md font-label-md">Share</span>
-</button>
-<button class="flex flex-col items-center gap-xs group">
-<div class="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center text-error group-hover:bg-error-container transition-all active:scale-90">
-<span class="material-symbols-outlined">close</span>
-</div>
-<span class="text-label-md font-label-md">Cancel</span>
-</button>
-</div>
-<!-- Safety & Support -->
-<div class="flex items-center justify-between bg-surface-container-low p-md rounded-xl">
-<div class="flex items-center gap-md">
-<div class="w-10 h-10 rounded-full bg-error-container flex items-center justify-center text-error">
-<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">security</span>
-</div>
-<div>
-<p class="text-label-md font-label-md text-primary">Safety Toolkit</p>
-<p class="text-body-sm text-on-surface-variant">Emergency help &amp; safety features</p>
-</div>
-</div>
-<span class="material-symbols-outlined text-outline">chevron_right</span>
-</div>
-</div>
-</section>
-<!-- JavaScript for Micro-interactions -->
-<script>
-    // Car movement simulation
-    const carMarker = document.getElementById('car-marker');
-    const positions = [
-      { top: '550px', left: '210px', rotate: '5deg' },
-      { top: '500px', left: '220px', rotate: '-10deg' },
-      { top: '450px', left: '190px', rotate: '-25deg' },
-      { top: '400px', left: '180px', rotate: '-5deg' },
-      { top: '350px', left: '180px', rotate: '0deg' }
-    ];
-    
-    let currentPos = 0;
-    function moveCar() {
-      if (currentPos < positions.length) {
-        const pos = positions[currentPos];
-        carMarker.style.top = pos.top;
-        carMarker.style.left = pos.left;
-        carMarker.style.transform = `translate(-50%, -50%) rotate(${pos.rotate})`;
-        currentPos++;
-        setTimeout(moveCar, 5000); // Move every 5 seconds
-      }
-    }
-    
-    window.onload = () => {
-      setTimeout(moveCar, 2000);
-    };
-
-    // Button active states
-    document.querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('touchstart', () => btn.classList.add('scale-95'));
-      btn.addEventListener('touchend', () => btn.classList.remove('scale-95'));
-    });
-  </script>
-</body></html>
+</script>
+</head>
+<body>
+<!-- NaviGoIN Ride Confirmed Screen -->
+</body>
+</html>
